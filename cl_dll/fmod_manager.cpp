@@ -5,15 +5,19 @@
 #include "fmod_manager.h"
 #include "FMOD/fmod_errors.h"
 
+#include <fstream>
 #include <iostream>
 
 FMOD::System *fmod_system;
 Fmod_Group fmod_mp3_group;
 Fmod_Group fmod_sfx_group;
 
+Fmod_Sound fmod_main_menu_music;
+
 bool Fmod_Init(void)
 {
     FMOD_RESULT result;
+    fmod_main_menu_music = NULL;
 
     // Create the main system object.
     result = FMOD::System_Create(&fmod_system);
@@ -63,7 +67,7 @@ Fmod_Sound Fmod_LoadSound(const char *path)
     return sound;
 }
 
-void Fmod_PlaySound(Fmod_Sound sound, Fmod_Group group, float volume)
+void Fmod_PlaySound(Fmod_Sound sound, Fmod_Group group, bool loop, float volume)
 {
     FMOD_RESULT result;
     FMOD::Channel *sound_channel;
@@ -73,7 +77,40 @@ void Fmod_PlaySound(Fmod_Sound sound, Fmod_Group group, float volume)
     _Fmod_Result_OK(&result);
 
     sound_channel->setVolume(volume);
+    if (loop) sound_channel->setMode(FMOD_LOOP_NORMAL);
+
     sound_channel->setPaused(false);
+}
+
+void Fmod_DestroySound(Fmod_Sound sound)
+{
+    sound->release();
+}
+
+void Fmod_PlayMainMenuMusic(void)
+{
+    std::string gamedir = gEngfuncs.pfnGetGameDirectory();
+    std::string cfg_path = gamedir + "/menu_music.cfg";
+
+    std::ifstream cfg_file;
+    cfg_file.open(cfg_path);
+
+    std::string music_file = "";
+    getline(cfg_file, music_file);
+
+    if (music_file.compare("") != 0)
+    {
+        // Get volume from cfg file
+        std::string volume_str = "";
+        float volume = 1.0f;
+        getline(cfg_file, volume_str);
+        volume = std::stof(volume_str);
+        
+        fmod_main_menu_music = Fmod_LoadSound(music_file.c_str());
+        Fmod_PlaySound(fmod_main_menu_music, fmod_mp3_group, true, volume);
+    }
+
+    cfg_file.close();
 }
 
 void Fmod_Shutdown(void)

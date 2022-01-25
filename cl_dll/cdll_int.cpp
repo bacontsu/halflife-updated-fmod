@@ -176,9 +176,7 @@ void DLLEXPORT HUD_Init()
 	gHUD.Init();
 	Scheme_Init();
 
-	// FMOD TEST
-	Fmod_Sound pizza = Fmod_LoadSound("music/pizza.mp3");
-	Fmod_PlaySound(pizza, fmod_mp3_group, 1.0f);
+	Fmod_PlayMainMenuMusic();
 }
 
 
