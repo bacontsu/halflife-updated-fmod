@@ -129,11 +129,10 @@ int DLLEXPORT Initialize(cl_enginefunc_t* pEnginefuncs, int iVersion)
 		return 0;
 	}
 
-	Fmod_Init(); // TODO: Error checking
-
-	// FMOD TEST
-	Fmod_Sound pizza = Fmod_LoadSound("test/music/pizza.mp3");
-	Fmod_PlaySound(pizza);
+	if (!Fmod_Init())
+	{
+		return 0;
+	}
 
 	// get tracker interface, if any
 	return 1;
@@ -176,6 +175,10 @@ void DLLEXPORT HUD_Init()
 	InitInput();
 	gHUD.Init();
 	Scheme_Init();
+
+	// FMOD TEST
+	Fmod_Sound pizza = Fmod_LoadSound("music/pizza.mp3");
+	Fmod_PlaySound(pizza, fmod_mp3_group, 1.0f);
 }
 
 
