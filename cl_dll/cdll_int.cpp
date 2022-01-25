@@ -36,6 +36,8 @@
 #include "vgui_TeamFortressViewport.h"
 #include "filesystem_utils.h"
 
+#include "fmod_manager.h"
+
 cl_enginefunc_t gEngfuncs;
 CHud gHUD;
 TeamFortressViewport* gViewPort = NULL;
@@ -126,6 +128,12 @@ int DLLEXPORT Initialize(cl_enginefunc_t* pEnginefuncs, int iVersion)
 	{
 		return 0;
 	}
+
+	Fmod_Init(); // TODO: Error checking
+
+	// FMOD TEST
+	Fmod_Sound pizza = Fmod_LoadSound("test/music/pizza.mp3");
+	Fmod_PlaySound(pizza);
 
 	// get tracker interface, if any
 	return 1;
@@ -239,6 +247,7 @@ void DLLEXPORT HUD_Frame(double time)
 {
 	//	RecClHudFrame(time);
 
+	Fmod_Think();
 	GetClientVoiceMgr()->Frame(time);
 }
 
