@@ -8,6 +8,12 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef WIN32
+    #define FMOD_PATH_SEP std::string("\\")
+#else
+    #define FMOD_PATH_SEP std::string("/")
+#endif
+
 FMOD::System *fmod_system;
 Fmod_Group fmod_mp3_group;
 Fmod_Group fmod_sfx_group;
@@ -59,7 +65,7 @@ Fmod_Sound Fmod_LoadSound(const char *path)
     Fmod_Sound sound;
 
     std::string gamedir = gEngfuncs.pfnGetGameDirectory();
-    std::string full_path = gamedir + "/" + path; 
+	std::string full_path = gamedir + FMOD_PATH_SEP + path; 
 
     result = fmod_system->createSound(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
     _Fmod_Result_OK(&result);
@@ -90,23 +96,27 @@ void Fmod_DestroySound(Fmod_Sound sound)
 void Fmod_PlayMainMenuMusic(void)
 {
     std::string gamedir = gEngfuncs.pfnGetGameDirectory();
-    std::string cfg_path = gamedir + "/menu_music.cfg";
+	std::string cfg_path = gamedir + FMOD_PATH_SEP + "menu_music.cfg";
 
     std::ifstream cfg_file;
     cfg_file.open(cfg_path);
 
-    std::string music_file = "";
-    getline(cfg_file, music_file);
+    std::string music_file_path = "";
+	cfg_file >> music_file_path;
 
-    if (music_file.compare("") != 0)
+    if (music_file_path.compare("") != 0)
     {
         // Get volume from cfg file
         std::string volume_str = "";
         float volume = 1.0f;
-        getline(cfg_file, volume_str);
-        volume = std::stof(volume_str);
+		cfg_file >> volume_str;
+
+        if (volume_str.compare("") != 0)
+			volume = std::stof(volume_str);
+		else
+			volume = 1.0f;
         
-        fmod_main_menu_music = Fmod_LoadSound(music_file.c_str());
+        fmod_main_menu_music = Fmod_LoadSound(music_file_path.c_str());
         Fmod_PlaySound(fmod_main_menu_music, fmod_mp3_group, true, volume);
     }
 
