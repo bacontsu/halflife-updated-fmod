@@ -101,6 +101,14 @@ void Fmod_PlayMainMenuMusic(void)
     std::ifstream cfg_file;
     cfg_file.open(cfg_path);
 
+    if (cfg_file.fail())
+	{
+		std::string error_msg = "FMOD ERROR: Could not open menu_music.cfg\n";
+		fprintf(stderr, error_msg.c_str());
+		ConsolePrint(error_msg.c_str());
+		return;
+    }
+
     std::string music_file_path = "";
 	cfg_file >> music_file_path;
 
