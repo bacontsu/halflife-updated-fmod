@@ -65,4 +65,7 @@ void LinkUserMessages()
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3);
 
 	gmsgWeapons = REG_USER_MSG("Weapons", 8);
+
+	gmsgFmodAmb = REG_USER_MSG("FmodAmb", -1);
+	gmsgFmodTrk = REG_USER_MSG("FmodTrk", -1);
 }

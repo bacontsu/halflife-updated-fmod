@@ -370,6 +370,21 @@ private:
 //
 //-----------------------------------------------------
 //
+
+class CHudFmodPlayer : public CHudBase
+{
+public:
+	bool Init() override;
+	bool VidInit() override;
+	bool Draw(float flTime) override;
+	void Reset() override;
+	bool MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf);
+};
+
+//
+//-----------------------------------------------------
+//
 const int maxHUDMessages = 16;
 struct message_parms_t
 {
@@ -571,6 +586,8 @@ public:
 	CHudAmmoSecondary m_AmmoSecondary;
 	CHudTextMessage m_TextMessage;
 	CHudStatusIcons m_StatusIcons;
+
+	CHudFmodPlayer m_Fmod;
 
 	void Init();
 	void VidInit();

@@ -1,7 +1,8 @@
 #include "cl_dll.h"
 #include "cl_util.h"
 #include "extdll.h"
-//#include "util.h"
+#include "hud.h"
+#include "parsemsg.h"
 #include "fmod_manager.h"
 #include "FMOD/fmod_errors.h"
 
@@ -171,3 +172,41 @@ bool _Fmod_Result_OK (FMOD_RESULT *result)
 
     return true;
 }
+
+DECLARE_MESSAGE(m_Fmod, FmodAmb)
+DECLARE_MESSAGE(m_Fmod, FmodTrk)
+
+bool CHudFmodPlayer::Init()
+{
+	HOOK_MESSAGE(FmodAmb);
+	HOOK_MESSAGE(FmodTrk);
+
+	gHUD.AddHudElem(this);
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	const char* msg = READ_STRING();
+
+    Fmod_Sound sound = Fmod_LoadSound(msg);
+	Fmod_PlaySound(sound, fmod_sfx_group, false, 1.0f);
+	
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	const char* msg = READ_STRING();
+
+	Fmod_Sound sound = Fmod_LoadSound(msg);
+	Fmod_PlaySound(sound, fmod_mp3_group, false, 1.0f);
+
+	return true;
+}
+
+bool CHudFmodPlayer::VidInit() { return true; }
+bool CHudFmodPlayer::Draw(float flTime) { return true; }
+void CHudFmodPlayer::Reset() { return; }
