@@ -378,6 +378,7 @@ public:
 	bool VidInit() override;
 	bool Draw(float flTime) override;
 	void Reset() override;
+	bool MsgFunc_FmodCache(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf);
 };

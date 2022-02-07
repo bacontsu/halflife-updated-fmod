@@ -66,6 +66,7 @@ void LinkUserMessages()
 
 	gmsgWeapons = REG_USER_MSG("Weapons", 8);
 
+	gmsgFmodCache = REG_USER_MSG("FmodCache", 0);
 	gmsgFmodAmb = REG_USER_MSG("FmodAmb", -1);
 	gmsgFmodTrk = REG_USER_MSG("FmodTrk", -1);
 }

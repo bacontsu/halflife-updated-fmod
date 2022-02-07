@@ -33,11 +33,13 @@ extern std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
 
 bool Fmod_Init(void);
 void Fmod_Think(void);
+void Fmod_Release_Sounds(void);
+void Fmod_Release_Channels(void);
 void Fmod_Shutdown(void);
 
 FMOD::Sound*   Fmod_CacheSound(const char* path, bool is_track);
 FMOD::Channel* Fmod_CreateChannel(FMOD::Sound *sound, const char* name, Fmod_Group group, bool loop, float volume);
 
 void _Fmod_Update_Volume(void);
-void _Fmod_Warn(void);
+void _Fmod_Report(std::string report_type, std::string info);
 bool _Fmod_Result_OK(FMOD_RESULT* result);
