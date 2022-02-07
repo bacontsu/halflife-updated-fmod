@@ -30,6 +30,10 @@
 #include <ctype.h>	// isspace
 
 #ifdef CLIENT_DLL
+#include "fmod_manager.h"
+#endif
+
+#ifdef CLIENT_DLL
 // Spectator Mode
 bool iJumpSpectator;
 float vJumpOrigin[3];
@@ -3384,6 +3388,34 @@ void PM_Move(struct playermove_s* ppmove, qboolean server)
 	{
 		pmove->friction = 1.0f;
 	}
+
+	#ifdef CLIENT_DLL
+	// Update fmod listener
+	FMOD_VECTOR pos;
+	FMOD_VECTOR vel;
+	FMOD_VECTOR forward;
+	FMOD_VECTOR up;
+
+	// TODO: rotate the vectors so that Y = up as Fmod requires. Half-Life uses Z = up
+
+	pos.x = pmove->origin.x;
+	pos.y = pmove->origin.y; // TODO: determine if we need to increase this to adjust for offset of camera from origin
+	pos.z = pmove->origin.z;
+
+	vel.x = pmove->velocity.x;
+	vel.y = pmove->velocity.y;
+	vel.z = pmove->velocity.z;
+
+	/*forward.x = pmove->forward.x;
+	forward.y = pmove->forward.y;
+	forward.z = pmove->forward.z;
+
+	up.x = pmove->up.x;
+	up.y = pmove->up.y;
+	up.z = pmove->up.z;*/
+
+	Fmod_Update_Listener_Position(&pos, &vel, NULL, NULL);
+	#endif
 }
 
 int PM_GetVisEntInfo(int ent)

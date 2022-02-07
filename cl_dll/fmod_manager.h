@@ -33,6 +33,7 @@ extern std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
 
 bool Fmod_Init(void);
 void Fmod_Think(void);
+void Fmod_Update_Listener_Position(FMOD_VECTOR *pos, FMOD_VECTOR *vel, FMOD_VECTOR *forward, FMOD_VECTOR *up);
 void Fmod_Release_Sounds(void);
 void Fmod_Release_Channels(void);
 void Fmod_Shutdown(void);

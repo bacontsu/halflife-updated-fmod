@@ -31,5 +31,8 @@ void CFmodAmbient::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE us
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodAmb, NULL);
 	WRITE_STRING(msg.c_str());
 	WRITE_BYTE(m_fLooping);
+	WRITE_COORD(pev->origin.x);
+	WRITE_COORD(pev->origin.y);
+	WRITE_COORD(pev->origin.z);
 	MESSAGE_END();
 }

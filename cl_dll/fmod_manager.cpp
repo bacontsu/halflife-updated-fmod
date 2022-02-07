@@ -57,6 +57,14 @@ void Fmod_Think(void)
     _Fmod_Update_Volume();
 }
 
+void Fmod_Update_Listener_Position(FMOD_VECTOR *pos, FMOD_VECTOR *vel, FMOD_VECTOR *forward, FMOD_VECTOR *up)
+{
+	FMOD_RESULT result;
+
+	result = fmod_system->set3DListenerAttributes(0, pos, vel, forward, up);
+	_Fmod_Result_OK(&result);
+}
+
 void Fmod_Release_Sounds(void)
 {
 	auto sounds_it = fmod_cached_sounds.begin();
@@ -93,7 +101,7 @@ FMOD::Sound* Fmod_CacheSound(const char* path, bool is_track)
 
     // Create the sound/stream from the file on disk
     if (!is_track)
-        result = fmod_system->createSound(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
+        result = fmod_system->createSound(full_path.c_str(), FMOD_3D, NULL, &sound);
 	else
 		result = fmod_system->createStream(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
 
@@ -199,7 +207,7 @@ bool _Fmod_Result_OK (FMOD_RESULT *result)
     if (*result != FMOD_OK)
     {
         std::string fmod_error_str = FMOD_ErrorString(*result);
-        std::string error_msg = "FMOD ERROR: " + *result + fmod_error_str + "\n";
+		std::string error_msg = "FMOD ERROR: " + *result + std::string(": ") + fmod_error_str + "\n";
         fprintf(stderr, error_msg.c_str());
         ConsolePrint(error_msg.c_str());
         return false;
@@ -274,6 +282,14 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	std::string msg = std::string(READ_STRING());
 	bool looping = READ_BYTE();
 
+    FMOD_VECTOR pos;
+	pos.x = READ_COORD();
+	pos.y = READ_COORD(); // Swap Y and Z. TODO: rotate vectors in pm_shared
+	pos.z = READ_COORD();
+
+    FMOD_VECTOR vel;
+	vel.x = 0; vel.y = 0; vel.z = 0;
+
     std::string channel_name = msg.substr(0, msg.find('\n'));
 	std::string sound_path = msg.substr(msg.find('\n')+1, std::string::npos);
 
@@ -297,6 +313,8 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	{
 		channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, false, 1.0f);
         if (!channel) return false;
+
+        channel->set3DAttributes(&pos, &vel);
 		channel->setPaused(false);
     }
 
@@ -312,6 +330,8 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		    if (!channel) return false;
         }
 	    else channel = channel_iter->second;
+
+        channel->set3DAttributes(&pos, &vel);
 
         // When a looping fmod_ambient gets used, by default it'll flip the status of paused
 		bool paused = false;
