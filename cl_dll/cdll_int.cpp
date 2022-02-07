@@ -176,7 +176,7 @@ void DLLEXPORT HUD_Init()
 	gHUD.Init();
 	Scheme_Init();
 
-	Fmod_PlayMainMenuMusic();
+	//Fmod_PlayMainMenuMusic();
 }
 
 

@@ -19,12 +19,15 @@ FMOD::System *fmod_system;
 Fmod_Group fmod_mp3_group;
 Fmod_Group fmod_sfx_group;
 
-Fmod_Sound fmod_main_menu_music;
+//Fmod_Sound fmod_main_menu_music;
+
+std::unordered_map<std::string, FMOD::Sound*> fmod_cached_sounds;
+std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
 
 bool Fmod_Init(void)
 {
     FMOD_RESULT result;
-    fmod_main_menu_music = NULL;
+    //fmod_main_menu_music = NULL;
 
     // Create the main system object.
     result = FMOD::System_Create(&fmod_system);
@@ -60,41 +63,52 @@ void Fmod_Think(void)
     _Fmod_Update_Volume();
 }
 
-Fmod_Sound Fmod_LoadSound(const char *path)
+FMOD::Sound* Fmod_CacheSound(const char* path, bool is_track)
 {
     FMOD_RESULT result;
-    Fmod_Sound sound;
+    FMOD::Sound *sound = NULL;
 
     std::string gamedir = gEngfuncs.pfnGetGameDirectory();
 	std::string full_path = gamedir + FMOD_PATH_SEP + path; 
 
-    result = fmod_system->createSound(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
-    _Fmod_Result_OK(&result);
+    // Create the sound/stream from the file on disk
+    if (!is_track)
+        result = fmod_system->createSound(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
+	else
+		result = fmod_system->createStream(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
+
+    // TODO: investigate if a failure here might create a memory leak
+	if (!_Fmod_Result_OK(&result)) return NULL;
+
+    // If all went okay, insert the sound into the cache
+	fmod_cached_sounds.insert(std::pair(path, sound));
 
     return sound;
 }
 
-void Fmod_PlaySound(Fmod_Sound sound, Fmod_Group group, bool loop, float volume)
+FMOD::Channel* Fmod_CreateChannel(FMOD::Sound* sound, const char* name, Fmod_Group group, bool loop, float volume)
 {
-    FMOD_RESULT result;
-    FMOD::Channel *sound_channel;
+	FMOD_RESULT result;
+	FMOD::Channel* channel = NULL;
 
-    // Play sound paused so we can apply the volume first
-    result = fmod_system->playSound(sound, group, true, &sound_channel);
-    _Fmod_Result_OK(&result);
+	// Create the sound channel
+	// We "play" the sound to create the channel, but it's starting paused so we can set properties on it before it /actually/ plays.
+	result = fmod_system->playSound(sound, group, true, &channel);
+	if (!_Fmod_Result_OK(&result)) return NULL; // TODO: investigate if a failure here might create a memory leak
 
-    sound_channel->setVolume(volume);
-    if (loop) sound_channel->setMode(FMOD_LOOP_NORMAL);
+    // Set channel properties
+	channel->setVolume(volume);
+	if (loop)
+	{
+		channel->setMode(FMOD_LOOP_NORMAL);
+		// If all went okay, stick it in the channel list. Only looping sounds store a reference.
+		fmod_channels.insert(std::pair(name, channel));
+	}
 
-    sound_channel->setPaused(false);
+	return channel;
 }
 
-void Fmod_DestroySound(Fmod_Sound sound)
-{
-    sound->release();
-}
-
-void Fmod_PlayMainMenuMusic(void)
+/* void Fmod_PlayMainMenuMusic(void)
 {
     std::string gamedir = gEngfuncs.pfnGetGameDirectory();
 	std::string cfg_path = gamedir + FMOD_PATH_SEP + "menu_music.cfg";
@@ -130,7 +144,7 @@ void Fmod_PlayMainMenuMusic(void)
     }
 
     cfg_file.close();
-}
+}*/
 
 void Fmod_Shutdown(void)
 {
@@ -173,6 +187,14 @@ bool _Fmod_Result_OK (FMOD_RESULT *result)
     return true;
 }
 
+// Shortcut to send message to both stderr and console
+void _Fmod_Warn(std::string warning)
+{
+	std::string msg = "FMOD WARNING: " + warning + "\n";
+	fprintf(stderr, msg.c_str());
+	ConsolePrint(msg.c_str());
+}
+
 DECLARE_MESSAGE(m_Fmod, FmodAmb)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)
 
@@ -188,11 +210,52 @@ bool CHudFmodPlayer::Init()
 bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
-	const char* msg = READ_STRING();
+	std::string msg = std::string(READ_STRING());
+	bool looping = READ_BYTE();
 
-    Fmod_Sound sound = Fmod_LoadSound(msg);
-	Fmod_PlaySound(sound, fmod_sfx_group, false, 1.0f);
+    std::string channel_name = msg.substr(0, msg.find('\n'));
+	std::string sound_path = msg.substr(msg.find('\n')+1, std::string::npos);
+
+    FMOD::Sound *sound = NULL;
+	FMOD::Channel *channel = NULL;
+
+    auto sound_iter = fmod_cached_sounds.find(sound_path);
 	
+    if (sound_iter == fmod_cached_sounds.end())
+	{
+		_Fmod_Warn("Entity " + channel_name + " playing uncached sound " + sound_path + 
+            ". Add the sound to your [MAPNAME].bsp_soundcache.txt file.");
+		_Fmod_Warn("Attempting to cache and play sound " + sound_path);
+		sound = Fmod_CacheSound(sound_path.c_str(), false);
+		if (!sound) return false;
+    }
+	else sound = sound_iter->second;
+
+    if (!looping)
+	{
+		channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, false, 1.0f);
+        if (!channel) return false;
+		channel->setPaused(false);
+    }
+
+    else
+	{
+        auto channel_iter = fmod_channels.find(channel_name);
+
+        if (channel_iter == fmod_channels.end())
+	    {
+            // TODO: send looping and volume info from entity
+		    channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, true, 1.0f);
+		    if (!channel) return false;
+        }
+	    else channel = channel_iter->second;
+
+        // When a looping fmod_ambient gets used, by default it'll flip the status of paused
+		bool paused = false;
+		channel->getPaused(&paused);
+	    channel->setPaused(!paused);
+    }
+
 	return true;
 }
 
@@ -201,8 +264,8 @@ bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 	BEGIN_READ(pbuf, iSize);
 	const char* msg = READ_STRING();
 
-	Fmod_Sound sound = Fmod_LoadSound(msg);
-	Fmod_PlaySound(sound, fmod_mp3_group, false, 1.0f);
+	//Fmod_Sound_Container sound = Fmod_LoadSound(msg);
+	//Fmod_PlaySound(sound, fmod_mp3_group, false, 1.0f);
 
 	return true;
 }
