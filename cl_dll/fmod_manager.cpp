@@ -43,6 +43,9 @@ bool Fmod_Init(void)
 
     _Fmod_Update_Volume();
 
+    // TODO: Allow customizing doppler and rolloff scale in a cfg
+    fmod_system->set3DSettings(1.0f, 40, 1.0f);
+
     return true;
 }
 
@@ -101,8 +104,7 @@ FMOD::Sound* Fmod_CacheSound(const char* path, bool is_track)
 
     // Create the sound/stream from the file on disk
     if (!is_track)
-        //result = fmod_system->createSound(full_path.c_str(), FMOD_3D, NULL, &sound);
-		result = fmod_system->createSound(full_path.c_str(), FMOD_DEFAULT, NULL, &sound); // don't do 3D sound for now
+        result = fmod_system->createSound(full_path.c_str(), FMOD_3D, NULL, &sound);
 	else
 		result = fmod_system->createStream(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
 
@@ -223,4 +225,15 @@ void _Fmod_Report(std::string report_type, std::string info)
 	std::string msg = "FMOD " + report_type +": " + info + "\n";
 	fprintf(stderr, msg.c_str());
 	ConsolePrint(msg.c_str());
+}
+
+// Convert HL's coordinate system to Fmod
+FMOD_VECTOR _Fmod_HLVecToFmodVec(const Vector &vec)
+{
+	FMOD_VECTOR FMODVector;
+	FMODVector.z = vec.x;
+	FMODVector.x = -vec.y;
+	FMODVector.y = vec.z;
+
+	return FMODVector;
 }

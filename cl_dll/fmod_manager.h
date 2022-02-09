@@ -44,3 +44,4 @@ FMOD::Channel* Fmod_CreateChannel(FMOD::Sound *sound, const char* name, Fmod_Gro
 void _Fmod_Update_Volume(void);
 void _Fmod_Report(std::string report_type, std::string info);
 bool _Fmod_Result_OK(FMOD_RESULT* result);
+FMOD_VECTOR _Fmod_HLVecToFmodVec(const Vector& vec);

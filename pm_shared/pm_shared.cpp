@@ -3391,28 +3391,10 @@ void PM_Move(struct playermove_s* ppmove, qboolean server)
 
 	#ifdef CLIENT_DLL
 	// Update fmod listener
-	FMOD_VECTOR pos;
-	FMOD_VECTOR vel;
-	FMOD_VECTOR forward;
-	FMOD_VECTOR up;
-
-	// TODO: rotate the vectors so that Y = up as Fmod requires. Half-Life uses Z = up
-
-	pos.x = pmove->origin.x;
-	pos.y = pmove->origin.y; // TODO: determine if we need to increase this to adjust for offset of camera from origin
-	pos.z = pmove->origin.z;
-
-	vel.x = pmove->velocity.x;
-	vel.y = pmove->velocity.y;
-	vel.z = pmove->velocity.z;
-
-	/*forward.x = pmove->forward.x;
-	forward.y = pmove->forward.y;
-	forward.z = pmove->forward.z;
-
-	up.x = pmove->up.x;
-	up.y = pmove->up.y;
-	up.z = pmove->up.z;*/
+	FMOD_VECTOR pos		= _Fmod_HLVecToFmodVec(pmove->origin);
+	FMOD_VECTOR vel		= _Fmod_HLVecToFmodVec(pmove->velocity);
+	FMOD_VECTOR forward = _Fmod_HLVecToFmodVec(pmove->forward);
+	FMOD_VECTOR up		= _Fmod_HLVecToFmodVec(pmove->up);
 
 	Fmod_Update_Listener_Position(&pos, &vel, NULL, NULL);
 	#endif

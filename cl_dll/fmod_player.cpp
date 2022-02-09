@@ -68,10 +68,12 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	std::string msg = std::string(READ_STRING());
 	bool looping = READ_BYTE();
 
-	FMOD_VECTOR pos;
+	Vector pos;
 	pos.x = READ_COORD();
-	pos.y = READ_COORD(); // Swap Y and Z. TODO: rotate vectors in pm_shared
+	pos.y = READ_COORD();
 	pos.z = READ_COORD();
+
+	FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
 
 	FMOD_VECTOR vel;
 	vel.x = 0;
@@ -105,7 +107,8 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		if (!channel)
 			return false;
 
-		channel->set3DAttributes(&pos, &vel);
+		channel->set3DAttributes(&fmod_pos, &vel);
+		//channel->set3DMinMaxDistance(5, 100);
 		channel->setPaused(false);
 	}
 
@@ -124,7 +127,8 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		else
 			channel = channel_iter->second;
 
-		channel->set3DAttributes(&pos, &vel);
+		channel->set3DAttributes(&fmod_pos, &vel);
+		//channel->set3DMinMaxDistance(5, 100);
 
 		// When a looping fmod_ambient gets used, by default it'll flip the status of paused
 		bool paused = false;
