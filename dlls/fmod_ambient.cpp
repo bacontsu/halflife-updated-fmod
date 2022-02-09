@@ -17,6 +17,7 @@ public:
 private:
 	int min_atten;
 	int max_atten;
+	int pitch;
 };
 
 LINK_ENTITY_TO_CLASS(fmod_ambient, CFmodAmbient);
@@ -46,6 +47,7 @@ void CFmodAmbient::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE us
 	WRITE_BYTE(pev->health); // Volume (0-255). 100 = 100% volume
 	WRITE_SHORT(min_atten);	 // Min Attenuation Distance (0-32767)
 	WRITE_LONG(max_atten); // Max Attenuation Distance (0-2147483647)
+	WRITE_BYTE(pitch); // Pitch (0-255). 100 = normal pitch, 200 = one octave up
 	MESSAGE_END();
 
 	// TODO: sanitize inputs
@@ -65,6 +67,13 @@ bool CFmodAmbient::KeyValue(KeyValueData* pkvd)
 	else if (FStrEq(pkvd->szKeyName, "maxatten"))
 	{
 		max_atten = atoi(pkvd->szValue);
+		return true;
+	}
+
+	// pitch
+	else if (FStrEq(pkvd->szKeyName, "pitch"))
+	{
+		pitch = atoi(pkvd->szValue);
 		return true;
 	}
 

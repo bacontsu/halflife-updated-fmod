@@ -85,6 +85,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 
 	int min_atten = READ_SHORT(); // 0-32767
 	int max_atten = READ_LONG(); // 0-2147483647
+	int pitch = READ_BYTE() / 100.0f; // 0-255. 100 = normal pitch, 200 = one octave up
 
 	// TODO: sanitize inputs
 
@@ -117,6 +118,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 
 		channel->set3DAttributes(&fmod_pos, &vel);
 		channel->set3DMinMaxDistance(min_atten, max_atten);
+		channel->setPitch(pitch);
 		channel->setPaused(false);
 	}
 
@@ -137,6 +139,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 
 		channel->set3DAttributes(&fmod_pos, &vel);
 		channel->set3DMinMaxDistance(min_atten, max_atten);
+		channel->setPitch(pitch);
 
 		// When a looping fmod_ambient gets used, by default it'll flip the status of paused
 		bool paused = false;
