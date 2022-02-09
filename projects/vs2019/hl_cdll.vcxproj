@@ -127,6 +127,7 @@
     <ClCompile Include="..\..\cl_dll\ev_hldm.cpp" />
     <ClCompile Include="..\..\cl_dll\flashlight.cpp" />
     <ClCompile Include="..\..\cl_dll\fmod_manager.cpp" />
+    <ClCompile Include="..\..\cl_dll\fmod_player.cpp" />
     <ClCompile Include="..\..\cl_dll\GameStudioModelRenderer.cpp" />
     <ClCompile Include="..\..\cl_dll\geiger.cpp" />
     <ClCompile Include="..\..\cl_dll\health.cpp" />
