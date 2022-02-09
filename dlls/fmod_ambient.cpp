@@ -43,7 +43,7 @@ void CFmodAmbient::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE us
 	WRITE_COORD(pev->origin.x);
 	WRITE_COORD(pev->origin.y);
 	WRITE_COORD(pev->origin.z);
-	WRITE_BYTE(pev->health); // Volume (0-255)
+	WRITE_BYTE(pev->health); // Volume (0-255). 100 = 100% volume
 	WRITE_SHORT(min_atten);	 // Min Attenuation Distance (0-32767)
 	WRITE_LONG(max_atten); // Max Attenuation Distance (0-2147483647)
 	MESSAGE_END();

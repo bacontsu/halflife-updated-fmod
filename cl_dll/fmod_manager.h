@@ -33,16 +33,16 @@ extern std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
 
 bool Fmod_Init(void);
 void Fmod_Update(void);
-void Fmod_Think(struct ref_params_s* pparams);
-void Fmod_Update_Listener_Position(FMOD_VECTOR* pos, FMOD_VECTOR* vel, FMOD_VECTOR* forward, FMOD_VECTOR* up);
+void Fmod_Think(struct ref_params_s *pparams);
+void Fmod_Update_Listener_Position(FMOD_VECTOR *pos, FMOD_VECTOR *vel, FMOD_VECTOR *forward, FMOD_VECTOR *up);
 void Fmod_Release_Sounds(void);
 void Fmod_Release_Channels(void);
 void Fmod_Shutdown(void);
 
-FMOD::Sound*   Fmod_CacheSound(const char* path, bool is_track);
-FMOD::Channel* Fmod_CreateChannel(FMOD::Sound *sound, const char* name, Fmod_Group group, bool loop, float volume);
+FMOD::Sound*   Fmod_CacheSound(const char* path, const bool is_track);
+FMOD::Channel* Fmod_CreateChannel(FMOD::Sound *sound, const char* name, const Fmod_Group &group, const bool loop, const float volume);
 
 void _Fmod_Update_Volume(void);
-void _Fmod_Report(std::string report_type, std::string info);
-bool _Fmod_Result_OK(FMOD_RESULT* result);
-FMOD_VECTOR _Fmod_HLVecToFmodVec(const Vector& vec);
+void _Fmod_Report(const std::string &report_type, const std::string &info);
+bool _Fmod_Result_OK(FMOD_RESULT *result);
+FMOD_VECTOR _Fmod_HLVecToFmodVec(const Vector &vec);

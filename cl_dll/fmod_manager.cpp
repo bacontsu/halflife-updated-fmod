@@ -108,7 +108,7 @@ void Fmod_Release_Channels(void)
 	fmod_channels.clear();
 }
 
-FMOD::Sound* Fmod_CacheSound(const char* path, bool is_track)
+FMOD::Sound* Fmod_CacheSound(const char* path, const bool is_track)
 {
     FMOD_RESULT result;
     FMOD::Sound *sound = NULL;
@@ -131,7 +131,7 @@ FMOD::Sound* Fmod_CacheSound(const char* path, bool is_track)
     return sound;
 }
 
-FMOD::Channel* Fmod_CreateChannel(FMOD::Sound* sound, const char* name, Fmod_Group group, bool loop, float volume)
+FMOD::Channel* Fmod_CreateChannel(FMOD::Sound* sound, const char* name, const Fmod_Group &group, const bool loop, const float volume)
 {
 	FMOD_RESULT result;
 	FMOD::Channel* channel = NULL;
@@ -234,7 +234,7 @@ bool _Fmod_Result_OK (FMOD_RESULT *result)
 }
 
 // Shortcut to send message to both stderr and console
-void _Fmod_Report(std::string report_type, std::string info)
+void _Fmod_Report(const std::string &report_type, const std::string &info)
 {
 	std::string msg = "FMOD " + report_type +": " + info + "\n";
 	fprintf(stderr, msg.c_str());

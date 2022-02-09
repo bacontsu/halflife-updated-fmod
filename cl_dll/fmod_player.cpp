@@ -80,8 +80,8 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	vel.y = 0;
 	vel.z = 0;
 
-	int vol_int = READ_BYTE(); // 0-255
-	float volume = vol_int / 255.0f; // convert 0-255 to 0-1.0 (floating point)
+	int vol_int = READ_BYTE(); // 0-255. 100 = 100% volume
+	float volume = vol_int / 100.0f; // convert 0-100 to 0-1.0 (floating point)
 
 	int min_atten = READ_SHORT(); // 0-32767
 	int max_atten = READ_LONG(); // 0-2147483647
