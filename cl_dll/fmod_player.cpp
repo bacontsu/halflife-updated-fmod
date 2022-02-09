@@ -67,7 +67,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	BEGIN_READ(pbuf, iSize);
 	std::string msg = std::string(READ_STRING());
 	bool looping = READ_BYTE();
-
+	// TODO: Clean this up and put all the reads together for more visual clarity in the code
 	Vector pos;
 	pos.x = READ_COORD();
 	pos.y = READ_COORD();
@@ -79,6 +79,14 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	vel.x = 0;
 	vel.y = 0;
 	vel.z = 0;
+
+	int vol_int = READ_BYTE(); // 0-255
+	float volume = vol_int / 255.0f; // convert 0-255 to 0-1.0 (floating point)
+
+	int min_atten = READ_SHORT(); // 0-32767
+	int max_atten = READ_LONG(); // 0-2147483647
+
+	// TODO: sanitize inputs
 
 	std::string channel_name = msg.substr(0, msg.find('\n'));
 	std::string sound_path = msg.substr(msg.find('\n') + 1, std::string::npos);
@@ -103,12 +111,12 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	// Non-looping sounds need a new channel every time they play
 	if (!looping)
 	{
-		channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, false, 1.0f);
+		channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, false, volume);
 		if (!channel)
 			return false;
 
 		channel->set3DAttributes(&fmod_pos, &vel);
-		//channel->set3DMinMaxDistance(5, 100);
+		channel->set3DMinMaxDistance(min_atten, max_atten);
 		channel->setPaused(false);
 	}
 
@@ -120,7 +128,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		if (channel_iter == fmod_channels.end())
 		{
 			// TODO: send looping and volume info from entity
-			channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, true, 1.0f);
+			channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, true, volume);
 			if (!channel)
 				return false;
 		}
@@ -128,7 +136,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 			channel = channel_iter->second;
 
 		channel->set3DAttributes(&fmod_pos, &vel);
-		//channel->set3DMinMaxDistance(5, 100);
+		channel->set3DMinMaxDistance(min_atten, max_atten);
 
 		// When a looping fmod_ambient gets used, by default it'll flip the status of paused
 		bool paused = false;

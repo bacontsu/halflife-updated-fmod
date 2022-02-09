@@ -49,7 +49,7 @@ bool Fmod_Init(void)
     return true;
 }
 
-void Fmod_Think(void)
+void Fmod_Update(void)
 {
     FMOD_RESULT result;
 
@@ -58,6 +58,20 @@ void Fmod_Think(void)
     _Fmod_Result_OK(&result);
 
     _Fmod_Update_Volume();
+}
+
+void Fmod_Think(struct ref_params_s* pparams)
+{
+	if (pparams->paused)
+	{
+		fmod_sfx_group->setPaused(true);
+		fmod_mp3_group->setPaused(true);
+    }
+	else
+	{
+		fmod_sfx_group->setPaused(false);
+		fmod_mp3_group->setPaused(false);
+    }
 }
 
 void Fmod_Update_Listener_Position(FMOD_VECTOR *pos, FMOD_VECTOR *vel, FMOD_VECTOR *forward, FMOD_VECTOR *up)

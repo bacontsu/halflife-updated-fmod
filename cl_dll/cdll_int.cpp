@@ -248,7 +248,7 @@ void DLLEXPORT HUD_Frame(double time)
 {
 	//	RecClHudFrame(time);
 
-	Fmod_Think();
+	Fmod_Update();
 	GetClientVoiceMgr()->Frame(time);
 }
 
