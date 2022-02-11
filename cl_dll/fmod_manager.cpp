@@ -18,10 +18,14 @@ Fmod_Group fmod_sfx_group;
 std::unordered_map<std::string, FMOD::Sound*> fmod_cached_sounds;
 std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
 
+std::unordered_map<std::string, FMOD::Sound*> fmod_tracks;
+FMOD::Channel* fmod_current_track;
+
 bool Fmod_Init(void)
 {
     FMOD_RESULT result;
     //fmod_main_menu_music = NULL;
+	fmod_current_track = NULL;
 
     // Create the main system object.
     result = FMOD::System_Create(&fmod_system);
@@ -45,6 +49,8 @@ bool Fmod_Init(void)
 
     // TODO: Allow customizing doppler and rolloff scale in a cfg
     fmod_system->set3DSettings(1.0f, 40, 1.0f);
+
+	_Fmod_LoadTracks();
 
     return true;
 }
@@ -72,6 +78,39 @@ void Fmod_Think(struct ref_params_s* pparams)
 		fmod_sfx_group->setPaused(false);
 		fmod_mp3_group->setPaused(false);
     }
+}
+
+void _Fmod_LoadTracks(void)
+{
+	// TODO: This and CHudFmodPlayer::MsgFunc_FmodCache are almost identical. Maybe consolidate into a single function.
+	std::string gamedir = gEngfuncs.pfnGetGameDirectory();
+	std::string tracks_txt_path = gamedir + "/" + "tracks.txt";
+
+	std::ifstream tracks_txt_file;
+	tracks_txt_file.open(tracks_txt_path);
+
+	if (!tracks_txt_file.is_open())
+	{
+		_Fmod_Report("WARNING", "Could not open soundcache file " + tracks_txt_path + ". No sounds were precached!");
+		return;
+	}
+	else _Fmod_Report("INFO", "Precaching tracks from file: " + tracks_txt_path);
+
+	std::string filename;
+	while (std::getline(tracks_txt_file, filename))
+	{
+		FMOD::Sound* sound = Fmod_CacheSound(filename.c_str(), true);
+		if (!sound)
+		{
+			_Fmod_Report("ERROR", "Error occured during precaching tracks. Tried precaching: " + filename + ". Precaching stopped.");
+			return;
+		}
+	}
+
+	if (!tracks_txt_file.eof())
+		_Fmod_Report("WARNING", "Stopped reading soundcache file " + tracks_txt_path + " before the end of file due to error.");
+
+	tracks_txt_file.close();
 }
 
 void Fmod_Update_Listener_Position(FMOD_VECTOR *pos, FMOD_VECTOR *vel, FMOD_VECTOR *forward, FMOD_VECTOR *up)
@@ -110,6 +149,11 @@ void Fmod_Release_Channels(void)
 
 FMOD::Sound* Fmod_CacheSound(const char* path, const bool is_track)
 {
+	return Fmod_CacheSound(path, is_track, false);
+}
+
+FMOD::Sound* Fmod_CacheSound(const char* path, const bool is_track, const bool play_everywhere)
+{
     FMOD_RESULT result;
     FMOD::Sound *sound = NULL;
 
@@ -117,16 +161,26 @@ FMOD::Sound* Fmod_CacheSound(const char* path, const bool is_track)
 	std::string full_path = gamedir + "/" + path; 
 
     // Create the sound/stream from the file on disk
-    if (!is_track)
-        result = fmod_system->createSound(full_path.c_str(), FMOD_3D, NULL, &sound);
-	else
+    if (is_track)
+	{
 		result = fmod_system->createStream(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
+		if (!_Fmod_Result_OK(&result)) return NULL; // TODO: investigate if a failure here might create a memory leak
 
-    // TODO: investigate if a failure here might create a memory leak
-	if (!_Fmod_Result_OK(&result)) return NULL;
+		// If all went okay, insert the track into the cache
+		fmod_tracks.insert(std::pair(path, sound));
+	}
+	else
+	{
+		if (play_everywhere)
+			result = fmod_system->createSound(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
+		else
+			result = fmod_system->createSound(full_path.c_str(), FMOD_3D, NULL, &sound);
 
-    // If all went okay, insert the sound into the cache
-	fmod_cached_sounds.insert(std::pair(path, sound));
+		if (!_Fmod_Result_OK(&result)) return NULL; // TODO: investigate if a failure here might create a memory leak
+
+		// If all went okay, insert the sound into the cache
+		fmod_cached_sounds.insert(std::pair(path, sound));
+	}
 
     return sound;
 }
@@ -236,7 +290,7 @@ bool _Fmod_Result_OK (FMOD_RESULT *result)
 // Shortcut to send message to both stderr and console
 void _Fmod_Report(const std::string &report_type, const std::string &info)
 {
-	std::string msg = "FMOD " + report_type +": " + info + "\n";
+	std::string msg = "FMOD " + report_type + ": " + info + "\n";
 	fprintf(stderr, msg.c_str());
 	ConsolePrint(msg.c_str());
 }

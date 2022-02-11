@@ -2859,10 +2859,6 @@ void CBasePlayer::Spawn()
 	m_flNextChatTime = gpGlobals->time;
 
 	g_pGameRules->PlayerSpawn(this);
-
-	// Tell Fmod to cache all the sounds for the level before gameplay starts
-	MESSAGE_BEGIN(MSG_ALL, gmsgFmodCache, NULL);
-	MESSAGE_END();
 }
 
 
@@ -3824,6 +3820,10 @@ void CBasePlayer::UpdateClientData()
 		if (!m_fGameHUDInitialized)
 		{
 			MESSAGE_BEGIN(MSG_ONE, gmsgInitHUD, NULL, pev);
+			MESSAGE_END();
+
+			// Tell client's Fmod instance to cache all the sounds for the level before gameplay starts
+			MESSAGE_BEGIN(MSG_ONE, gmsgFmodCache, NULL, pev);
 			MESSAGE_END();
 
 			g_pGameRules->InitHUD(this);

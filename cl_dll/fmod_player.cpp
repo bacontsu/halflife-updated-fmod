@@ -40,8 +40,7 @@ bool CHudFmodPlayer::MsgFunc_FmodCache(const char* pszName, int iSize, void* pbu
 		_Fmod_Report("WARNING", "Could not open soundcache file " + soundcache_path + ". No sounds were precached!");
 		return true;
 	}
-	else
-		_Fmod_Report("INFO", "Precaching from file: " + soundcache_path);
+	else _Fmod_Report("INFO", "Precaching sounds from file: " + soundcache_path);
 
 	std::string filename;
 	while (std::getline(soundcache_file, filename))
@@ -49,7 +48,7 @@ bool CHudFmodPlayer::MsgFunc_FmodCache(const char* pszName, int iSize, void* pbu
 		FMOD::Sound* sound = Fmod_CacheSound(filename.c_str(), false);
 		if (!sound)
 		{
-			_Fmod_Report("ERROR", "Error occured during precaching. Tried precaching: " + filename + ". Precaching stopped.");
+			_Fmod_Report("ERROR", "Error occured during precaching sounds. Tried precaching: " + filename + ". Precaching stopped.");
 			return false;
 		}
 	}
@@ -85,7 +84,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 
 	int min_atten = READ_SHORT(); // 0-32767
 	int max_atten = READ_LONG(); // 0-2147483647
-	int pitch = READ_BYTE() / 100.0f; // 0-255. 100 = normal pitch, 200 = one octave up
+	float pitch = READ_BYTE() / 100.0f; // 0-255. 100 = normal pitch, 200 = one octave up
 
 	// TODO: sanitize inputs
 
@@ -103,8 +102,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 									". Add the sound to your [MAPNAME].bsp_soundcache.txt file.");
 		_Fmod_Report("WARNING", "Attempting to cache and play sound " + sound_path);
 		sound = Fmod_CacheSound(sound_path.c_str(), false);
-		if (!sound)
-			return false;
+		if (!sound) return false;
 	}
 	else
 		sound = sound_iter->second;
@@ -113,8 +111,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	if (!looping)
 	{
 		channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, false, volume);
-		if (!channel)
-			return false;
+		if (!channel) return false;
 
 		channel->set3DAttributes(&fmod_pos, &vel);
 		channel->set3DMinMaxDistance(min_atten, max_atten);
@@ -131,11 +128,9 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		{
 			// TODO: send looping and volume info from entity
 			channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, true, volume);
-			if (!channel)
-				return false;
+			if (!channel) return false;
 		}
-		else
-			channel = channel_iter->second;
+		else channel = channel_iter->second;
 
 		channel->set3DAttributes(&fmod_pos, &vel);
 		channel->set3DMinMaxDistance(min_atten, max_atten);
@@ -153,10 +148,39 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
-	const char* msg = READ_STRING();
+	std::string sound_path = std::string(READ_STRING());
+	bool looping = READ_BYTE();
+	// TODO: Clean this up and put all the reads together for more visual clarity in the code
 
-	//Fmod_Sound_Container sound = Fmod_LoadSound(msg);
-	//Fmod_PlaySound(sound, fmod_mp3_group, false, 1.0f);
+	int vol_int = READ_BYTE();		 // 0-255. 100 = 100% volume
+	float volume = vol_int / 100.0f; // convert 0-100 to 0-1.0 (floating point)
+
+	float pitch = READ_BYTE() / 100.0f; // 0-255. 100 = normal pitch, 200 = one octave up
+
+	// TODO: sanitize inputs
+;
+	FMOD::Sound* sound = NULL;
+
+	auto sound_iter = fmod_tracks.find(sound_path);
+
+	if (sound_iter == fmod_tracks.end())
+	{
+		_Fmod_Report("ERROR", "Attempting to play " + sound_path + " without caching it. Add it to your tracks.txt!");
+		return false;
+	}
+	else sound = sound_iter->second;
+
+	// Create a fresh channel every time a track plays
+	if (fmod_current_track) fmod_current_track->stop();
+	FMOD_RESULT result = fmod_system->playSound(sound, fmod_mp3_group, true, &fmod_current_track);
+	if (!_Fmod_Result_OK(&result)) return false; // TODO: investigate if a failure here might create a memory leak
+
+    // Set channel properties
+	fmod_current_track->setVolume(volume);
+	if (looping) fmod_current_track->setMode(FMOD_LOOP_NORMAL);
+
+	fmod_current_track->setPitch(pitch);
+	fmod_current_track->setPaused(false);
 
 	return true;
 }
