@@ -11,7 +11,7 @@ public:
 	void Spawn() override;
 	void Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value) override;
 	bool KeyValue(KeyValueData* pkvd) override;
-	void SendMsg(void);
+	void EXPORT SendMsg(void);
 
 	bool m_fLooping;
 	bool m_fPlayOnStart;

@@ -3817,13 +3817,14 @@ void CBasePlayer::UpdateClientData()
 		WRITE_BYTE(0);
 		MESSAGE_END();
 
+		// Tell client's Fmod instance to cache all the sounds for the level before gameplay starts
+		MESSAGE_BEGIN(MSG_ONE, gmsgFmodCache, NULL, pev);
+		MESSAGE_END();
+		// TODO: Make sure this doesn't happen when this gets called for, say, removing the HEV suit
+
 		if (!m_fGameHUDInitialized)
 		{
 			MESSAGE_BEGIN(MSG_ONE, gmsgInitHUD, NULL, pev);
-			MESSAGE_END();
-
-			// Tell client's Fmod instance to cache all the sounds for the level before gameplay starts
-			MESSAGE_BEGIN(MSG_ONE, gmsgFmodCache, NULL, pev);
 			MESSAGE_END();
 
 			g_pGameRules->InitHUD(this);
