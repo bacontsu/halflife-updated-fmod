@@ -57,8 +57,7 @@ inline int gmsgWeapons = 0;
 
 inline int gmsgFmodCache = 0;
 inline int gmsgFmodAmb = 0;
-inline int gmsgFmodAmbPs = 0;
 inline int gmsgFmodTrk = 0;
-inline int gmsgFmodTrkPs = 0;
+inline int gmsgFmodPause = 0;
 
 void LinkUserMessages();

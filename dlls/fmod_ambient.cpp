@@ -104,28 +104,28 @@ bool CFmodAmbient::KeyValue(KeyValueData* pkvd)
 	return CBaseEntity::KeyValue(pkvd);
 }
 
-class CFmodAmbPause : public CBaseEntity
+class CFmodPause : public CBaseEntity
 {
 public:
 	void Spawn() override;
 	void Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value) override;
 };
 
-LINK_ENTITY_TO_CLASS(fmod_ambient_pause, CFmodAmbPause);
+LINK_ENTITY_TO_CLASS(fmod_pause, CFmodPause);
 
-void CFmodAmbPause::Spawn()
+void CFmodPause::Spawn()
 {
 	if (FStringNull(pev->targetname) || FStringNull(pev->target))
 	{
-		ALERT(at_error, "EMPTY FMOD_AMBIENT_PAUSE AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z);
+		ALERT(at_error, "EMPTY FMOD_PAUSE AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z);
 		REMOVE_ENTITY(ENT(pev));
 		return;
 	}
 }
 
-void CFmodAmbPause::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
+void CFmodPause::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
 {
-	MESSAGE_BEGIN(MSG_ALL, gmsgFmodAmbPs, NULL);
+	MESSAGE_BEGIN(MSG_ALL, gmsgFmodPause, NULL);
 	WRITE_STRING(STRING(pev->target));
 	MESSAGE_END();
 }

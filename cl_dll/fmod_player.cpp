@@ -11,17 +11,15 @@
 
 DECLARE_MESSAGE(m_Fmod, FmodCache)
 DECLARE_MESSAGE(m_Fmod, FmodAmb)
-DECLARE_MESSAGE(m_Fmod, FmodAmbPs)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)
-DECLARE_MESSAGE(m_Fmod, FmodTrkPs)
+DECLARE_MESSAGE(m_Fmod, FmodPause)
 
 bool CHudFmodPlayer::Init()
 {
 	HOOK_MESSAGE(FmodCache);
 	HOOK_MESSAGE(FmodAmb);
-	HOOK_MESSAGE(FmodAmbPs);
 	HOOK_MESSAGE(FmodTrk);
-	HOOK_MESSAGE(FmodTrkPs);
+	HOOK_MESSAGE(FmodPause);
 
 	gHUD.AddHudElem(this);
 	return true;
@@ -196,30 +194,6 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	return true;
 }
 
-bool CHudFmodPlayer::MsgFunc_FmodAmbPs(const char* pszName, int iSize, void* pbuf)
-{
-	BEGIN_READ(pbuf, iSize);
-	std::string channel_name = std::string(READ_STRING());
-
-	auto it = fmod_channels.find(channel_name);
-
-	if (it == fmod_channels.end())
-	{
-		_Fmod_Report("WARNING", "Tried to play/pause unknown channel " + channel_name);
-		return false;
-	}
-
-	FMOD::Channel *channel = it->second;
-
-	if (channel)
-	{
-		bool paused = false;
-		channel->getPaused(&paused);
-		channel->setPaused(!paused);
-	}
-	return true;
-}
-
 bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
@@ -263,13 +237,34 @@ bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 	return true;
 }
 
-bool CHudFmodPlayer::MsgFunc_FmodTrkPs(const char* pszName, int iSize, void* pbuf)
+bool CHudFmodPlayer::MsgFunc_FmodPause(const char* pszName, int iSize, void* pbuf)
 {
-	if (fmod_current_track)
+	BEGIN_READ(pbuf, iSize);
+	std::string channel_name = std::string(READ_STRING());
+
+	FMOD::Channel* channel = NULL;
+
+	if (channel_name == "fmod_current_track") 
+	{
+		channel = fmod_current_track;
+	}
+
+	else
+	{
+		auto it = fmod_channels.find(channel_name);
+		if (it == fmod_channels.end())
+		{
+			_Fmod_Report("WARNING", "Tried to play/pause unknown channel " + channel_name);
+			return false;
+		}
+		channel = it->second;
+	}
+
+	if (channel)
 	{
 		bool paused = false;
-		fmod_current_track->getPaused(&paused);
-		fmod_current_track->setPaused(!paused);
+		channel->getPaused(&paused);
+		channel->setPaused(!paused);
 	}
 	return true;
 }
