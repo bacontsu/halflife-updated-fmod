@@ -11,8 +11,10 @@ public:
 	void Spawn() override;
 	void Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value) override;
 	bool KeyValue(KeyValueData* pkvd) override;
+	void EXPORT SendMsg(void);
 
 	bool m_fLooping;
+	bool m_fPlayOnStart;
 
 private:
 	int min_atten;
@@ -23,17 +25,33 @@ private:
 LINK_ENTITY_TO_CLASS(fmod_ambient, CFmodAmbient);
 
 #define FMOD_AMBIENT_LOOPING 1
+#define FMOD_AMBIENT_PLAYONSTART 2
 
 void CFmodAmbient::Spawn()
 {
 	// TODO: Throw error if pev->targetname is empty
-	if (FBitSet(pev->spawnflags, FMOD_AMBIENT_LOOPING)) m_fLooping = true;
+	if (FBitSet(pev->spawnflags, FMOD_AMBIENT_LOOPING)) 
+		m_fLooping = true;
+
+	if (FBitSet(pev->spawnflags, FMOD_AMBIENT_PLAYONSTART))
+		m_fPlayOnStart = true;
 
 	pev->solid = SOLID_NOT;
 	pev->movetype = MOVETYPE_NONE;
+
+	if (m_fPlayOnStart)
+	{
+		SetThink(&CFmodAmbient::SendMsg);
+		pev->nextthink = gpGlobals->time + 0.2f; // TODO: Make sure this is a long enough delay or the message might get dropped
+	}
 }
 
 void CFmodAmbient::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
+{
+	SendMsg();
+}
+
+void CFmodAmbient::SendMsg(void)
 {
 	// Name of the channel and path of the sound
 	std::string msg = STRING(pev->targetname) + std::string("\n") + STRING(pev->message);
@@ -46,8 +64,8 @@ void CFmodAmbient::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE us
 	WRITE_COORD(pev->origin.z);
 	WRITE_BYTE(pev->health); // Volume (0-255). 100 = 100% volume
 	WRITE_SHORT(min_atten);	 // Min Attenuation Distance (0-32767)
-	WRITE_LONG(max_atten); // Max Attenuation Distance (0-2147483647)
-	WRITE_BYTE(pitch); // Pitch (0-255). 100 = normal pitch, 200 = one octave up
+	WRITE_LONG(max_atten);	 // Max Attenuation Distance (0-2147483647)
+	WRITE_BYTE(pitch);		 // Pitch (0-255). 100 = normal pitch, 200 = one octave up
 	MESSAGE_END();
 
 	// TODO: sanitize inputs
