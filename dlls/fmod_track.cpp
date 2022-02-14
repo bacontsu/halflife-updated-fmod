@@ -27,6 +27,13 @@ LINK_ENTITY_TO_CLASS(fmod_track, CFmodTrack);
 
 void CFmodTrack::Spawn()
 {
+	if (FStringNull(pev->message))
+	{
+		ALERT(at_error, "EMPTY FMOD_TRACK AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z);
+		REMOVE_ENTITY(ENT(pev));
+		return;
+	}
+
 	if (FBitSet(pev->spawnflags, FMOD_TRACK_LOOPING))
 		m_fLooping = true;
 	if (FBitSet(pev->spawnflags, FMOD_TRACK_PLAYONSTART))
@@ -70,4 +77,29 @@ bool CFmodTrack::KeyValue(KeyValueData* pkvd)
 	}
 
 	return CBaseEntity::KeyValue(pkvd);
+}
+
+class CFmodTrackPause : public CBaseEntity
+{
+public:
+	void Spawn() override;
+	void Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value) override;
+};
+
+LINK_ENTITY_TO_CLASS(fmod_track_pause, CFmodTrackPause);
+
+void CFmodTrackPause::Spawn()
+{
+	if (FStringNull(pev->targetname))
+	{
+		ALERT(at_error, "EMPTY FMOD_TRACK_PAUSE AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z);
+		REMOVE_ENTITY(ENT(pev));
+		return;
+	}
+}
+
+void CFmodTrackPause::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
+{
+	MESSAGE_BEGIN(MSG_ALL, gmsgFmodTrkPs, NULL);
+	MESSAGE_END();
 }

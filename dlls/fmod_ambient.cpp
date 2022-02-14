@@ -29,7 +29,13 @@ LINK_ENTITY_TO_CLASS(fmod_ambient, CFmodAmbient);
 
 void CFmodAmbient::Spawn()
 {
-	// TODO: Throw error if pev->targetname is empty
+	if (FStringNull(pev->message))
+	{
+		ALERT(at_error, "EMPTY FMOD_AMBIENT AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z);
+		REMOVE_ENTITY(ENT(pev));
+		return;
+	}
+
 	if (FBitSet(pev->spawnflags, FMOD_AMBIENT_LOOPING)) 
 		m_fLooping = true;
 
@@ -96,4 +102,30 @@ bool CFmodAmbient::KeyValue(KeyValueData* pkvd)
 	}
 
 	return CBaseEntity::KeyValue(pkvd);
+}
+
+class CFmodAmbPause : public CBaseEntity
+{
+public:
+	void Spawn() override;
+	void Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value) override;
+};
+
+LINK_ENTITY_TO_CLASS(fmod_ambient_pause, CFmodAmbPause);
+
+void CFmodAmbPause::Spawn()
+{
+	if (FStringNull(pev->targetname) || FStringNull(pev->target))
+	{
+		ALERT(at_error, "EMPTY FMOD_AMBIENT_PAUSE AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z);
+		REMOVE_ENTITY(ENT(pev));
+		return;
+	}
+}
+
+void CFmodAmbPause::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
+{
+	MESSAGE_BEGIN(MSG_ALL, gmsgFmodAmbPs, NULL);
+	WRITE_STRING(STRING(pev->target));
+	MESSAGE_END();
 }

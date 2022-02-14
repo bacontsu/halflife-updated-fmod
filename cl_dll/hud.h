@@ -380,7 +380,9 @@ public:
 	void Reset() override;
 	bool MsgFunc_FmodCache(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_FmodAmbPs(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_FmodTrkPs(const char* pszName, int iSize, void* pbuf);
 };
 
 //
