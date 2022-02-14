@@ -38,7 +38,7 @@ void CFmodTrack::Spawn()
 	if (m_fPlayOnStart)
 	{
 		SetThink(&CFmodTrack::SendMsg);
-		pev->nextthink = gpGlobals->time + 0.1f;
+		pev->nextthink = gpGlobals->time + 0.2f; // TODO: Make sure this is a long enough delay or the message might get dropped
 	}
 }
 
