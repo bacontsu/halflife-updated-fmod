@@ -13,6 +13,7 @@ DECLARE_MESSAGE(m_Fmod, FmodCache)
 DECLARE_MESSAGE(m_Fmod, FmodAmb)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)
 DECLARE_MESSAGE(m_Fmod, FmodPause)
+DECLARE_MESSAGE(m_Fmod, FmodSeek)
 
 bool CHudFmodPlayer::Init()
 {
@@ -20,6 +21,7 @@ bool CHudFmodPlayer::Init()
 	HOOK_MESSAGE(FmodAmb);
 	HOOK_MESSAGE(FmodTrk);
 	HOOK_MESSAGE(FmodPause);
+	HOOK_MESSAGE(FmodSeek);
 
 	gHUD.AddHudElem(this);
 	return true;
@@ -242,7 +244,7 @@ bool CHudFmodPlayer::MsgFunc_FmodPause(const char* pszName, int iSize, void* pbu
 	BEGIN_READ(pbuf, iSize);
 	std::string channel_name = std::string(READ_STRING());
 
-	FMOD::Channel* channel = NULL;
+	FMOD::Channel *channel = NULL;
 
 	if (channel_name == "fmod_current_track") 
 	{
@@ -265,6 +267,39 @@ bool CHudFmodPlayer::MsgFunc_FmodPause(const char* pszName, int iSize, void* pbu
 		bool paused = false;
 		channel->getPaused(&paused);
 		channel->setPaused(!paused);
+	}
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodSeek(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	std::string channel_name = std::string(READ_STRING());
+	float seek_to = READ_COORD();
+	unsigned int position = (unsigned int)(seek_to * 1000); // convert seconds to milliseconds
+
+	FMOD::Channel *channel = NULL;
+
+	// TODO: Maybe consolidate finding the channel into a reusable function
+	if (channel_name == "fmod_current_track") 
+	{
+		channel = fmod_current_track;
+	}
+
+	else
+	{
+		auto it = fmod_channels.find(channel_name);
+		if (it == fmod_channels.end())
+		{
+			_Fmod_Report("WARNING", "Tried to play/pause unknown channel " + channel_name);
+			return false;
+		}
+		channel = it->second;
+	}
+
+	if (channel)
+	{
+		channel->setPosition(position, FMOD_TIMEUNIT_MS);
 	}
 	return true;
 }

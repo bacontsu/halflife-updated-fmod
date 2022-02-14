@@ -71,4 +71,5 @@ void LinkUserMessages()
 	gmsgFmodAmb = REG_USER_MSG("FmodAmb", -1);
 	gmsgFmodTrk = REG_USER_MSG("FmodTrk", -1);
 	gmsgFmodPause = REG_USER_MSG("FmodPause", -1);
+	gmsgFmodSeek = REG_USER_MSG("FmodSeek", -1);
 }

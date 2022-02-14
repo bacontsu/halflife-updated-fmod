@@ -104,6 +104,8 @@ bool CFmodAmbient::KeyValue(KeyValueData* pkvd)
 	return CBaseEntity::KeyValue(pkvd);
 }
 
+// -----------------------------------------------------------------------------------------------
+
 class CFmodPause : public CBaseEntity
 {
 public:
@@ -128,4 +130,49 @@ void CFmodPause::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useT
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodPause, NULL);
 	WRITE_STRING(STRING(pev->target));
 	MESSAGE_END();
+}
+
+// -----------------------------------------------------------------------------------------------
+
+class CFmodSeek : public CBaseEntity
+{
+public:
+	void Spawn() override;
+	void Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value) override;
+	bool KeyValue(KeyValueData* pkvd) override;
+
+private:
+	float seek_to;
+};
+
+LINK_ENTITY_TO_CLASS(fmod_seek, CFmodSeek);
+
+void CFmodSeek::Spawn()
+{
+	if (FStringNull(pev->targetname) || FStringNull(pev->target))
+	{
+		ALERT(at_error, "EMPTY FMOD_SEEK AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z);
+		REMOVE_ENTITY(ENT(pev));
+		return;
+	}
+}
+
+void CFmodSeek::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
+{
+	MESSAGE_BEGIN(MSG_ALL, gmsgFmodSeek, NULL);
+	WRITE_STRING(STRING(pev->target));
+	WRITE_COORD(seek_to);
+	MESSAGE_END();
+}
+
+bool CFmodSeek::KeyValue(KeyValueData* pkvd)
+{
+	// seek
+	if (FStrEq(pkvd->szKeyName, "seek"))
+	{
+		seek_to = atof(pkvd->szValue);
+		return true;
+	}
+
+	return CBaseEntity::KeyValue(pkvd);
 }
