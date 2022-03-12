@@ -61,6 +61,8 @@
 
 #define TEAM_NAME_LENGTH 16
 
+#define FMOD_SAVE_LENGTH 64
+
 typedef enum
 {
 	PLAYER_IDLE,
@@ -340,6 +342,9 @@ public:
 	int m_iAutoWepSwitch;
 
 	bool m_bRestored;
+
+	char m_fmodSaveName[FMOD_SAVE_LENGTH];
+	bool m_fmodNeedRestore;
 };
 
 inline void CBasePlayer::SetWeaponBit(int id)

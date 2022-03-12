@@ -14,6 +14,8 @@ DECLARE_MESSAGE(m_Fmod, FmodAmb)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)
 DECLARE_MESSAGE(m_Fmod, FmodPause)
 DECLARE_MESSAGE(m_Fmod, FmodSeek)
+DECLARE_MESSAGE(m_Fmod, FmodSave)
+DECLARE_MESSAGE(m_Fmod, FmodLoad)
 
 bool CHudFmodPlayer::Init()
 {
@@ -22,8 +24,30 @@ bool CHudFmodPlayer::Init()
 	HOOK_MESSAGE(FmodTrk);
 	HOOK_MESSAGE(FmodPause);
 	HOOK_MESSAGE(FmodSeek);
+	HOOK_MESSAGE(FmodSave);
+	HOOK_MESSAGE(FmodLoad);
 
 	gHUD.AddHudElem(this);
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	std::string filename = std::string(READ_STRING());
+
+	_Fmod_Report("INFO", "Saving the following file: " + filename);
+
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	std::string filename = std::string(READ_STRING());
+
+	_Fmod_Report("INFO", "Loading the following file: " + filename);
+
 	return true;
 }
 

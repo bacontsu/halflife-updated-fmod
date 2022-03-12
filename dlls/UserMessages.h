@@ -60,5 +60,7 @@ inline int gmsgFmodAmb = 0;
 inline int gmsgFmodTrk = 0;
 inline int gmsgFmodPause = 0;
 inline int gmsgFmodSeek = 0;
+inline int gmsgFmodSave = 0;
+inline int gmsgFmodLoad = 0;
 
 void LinkUserMessages();
