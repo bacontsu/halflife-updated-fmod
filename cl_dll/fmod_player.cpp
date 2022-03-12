@@ -6,6 +6,7 @@
 #include "fmod_manager.h"
 #include "FMOD/fmod_errors.h"
 
+#include <map>
 #include <fstream>
 #include <iostream>
 
@@ -85,6 +86,7 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 	while (channels_it != fmod_channels.end())
 	{
 		// channel entry: ENT_NAME SOUND_NAME MODE X Y Z VOLUME MINDIST MAXDIST PITCH POSITION PAUSED
+		std::string ent_name = channels_it->first;
 		FMOD::Channel *channel = channels_it->second;
 
 		FMOD_MODE mode;
@@ -105,7 +107,32 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 		channel->getPosition(&position, FMOD_TIMEUNIT_PCM);
 		channel->getPaused(&paused);
 
-		save_file << channels_it->first << " " << mode << " " << pos.x << " " << pos.y << " " << pos.z << " " << volume << " " << minDist << " " << maxDist << " " << pitch << " " << position << " " << paused;
+		// Find sound path
+		std::string sound_name = "";
+		FMOD::Sound *sound;
+		channel->getCurrentSound(&sound);
+
+		// Do quick and dirty find by value
+		auto sounds_it = fmod_cached_sounds.begin();
+		while (sounds_it != fmod_cached_sounds.end())
+		{
+			if (sounds_it->second == sound)
+			{
+				sound_name = sounds_it->first;
+				break;
+			}
+
+			sounds_it++;
+		}
+
+		if (sounds_it == fmod_cached_sounds.end())
+		{
+			_Fmod_Report("ERROR", "Could not find sound for ent " + ent_name + " for savefile!");
+			return false;
+		}
+
+		save_file << ent_name << " " << sound_name << " " << mode << " " << pos.x << " " << pos.y << " " << pos.z
+			<< " " << volume << " " << minDist << " " << maxDist << " " << pitch << " " << position << " " << paused;
 
 		channels_it++;
 
@@ -148,8 +175,16 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 	bool current_track_paused = true;
 
 	save_file >> current_track_sound_name >> current_track_mode >> current_track_volume >> current_track_pitch >> current_track_position >> current_track_paused;
+	// TODO: verify we didn't reach EOF
 
 	auto it = fmod_tracks.find(current_track_sound_name);
+
+	if (it == fmod_tracks.end())
+	{
+		_Fmod_Report("ERROR", "Could not find track " + current_track_sound_name + " while loading savefile!");
+		return false;
+	}
+
 	FMOD::Sound *current_track_sound = it->second;
 
 	FMOD_RESULT result = fmod_system->playSound(current_track_sound, fmod_mp3_group, true, &fmod_current_track);
@@ -161,6 +196,49 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 	fmod_current_track->setPitch(current_track_pitch);
 	fmod_current_track->setPosition(current_track_position, FMOD_TIMEUNIT_PCM);
 	fmod_current_track->setPaused(current_track_paused);
+
+	while (!save_file.eof())
+	{
+		std::string ent_name = "";
+		std::string sound_name = "";
+		FMOD_MODE mode;
+		FMOD_VECTOR pos;
+		FMOD_VECTOR vel; // unused
+		float volume = 0.0f;
+		float minDist = 40.0f;
+		float maxDist = 400000.0f;
+		float pitch = 1.0f;
+		unsigned int position = 0;
+		bool paused = true;
+
+		save_file >> ent_name >> sound_name >> mode >> pos.x >> pos.y >> pos.z >> volume >> minDist >> maxDist >> pitch >> position >> paused;
+		vel.x = 0; vel.y = 0; vel.z = 0;
+
+		FMOD::Sound *sound = nullptr;
+		auto sound_it = fmod_cached_sounds.find(sound_name);
+
+		if (sound_it == fmod_cached_sounds.end())
+		{
+			// TODO: Precaching is breaking on load for some reason. Fix it.
+			/*_Fmod_Report("ERROR", "Could not find sound " + sound_name + " for ent " + ent_name + " from savefile!");
+			return false;*/
+
+			// HACK: For now, force sound to be cached here
+			sound = Fmod_CacheSound(sound_name.c_str(), false);
+		}
+		else
+		{
+			sound = sound_it->second;
+		}
+
+		FMOD::Channel *channel = Fmod_CreateChannel(sound, ent_name.c_str(), fmod_sfx_group, false, volume);
+		channel->setMode(mode);
+		channel->set3DAttributes(&pos, &vel);
+		channel->set3DMinMaxDistance(minDist, maxDist);
+		channel->setPitch(pitch);
+		channel->setPosition(position, FMOD_TIMEUNIT_PCM);
+		channel->setPaused(paused);
+	}
 
 	save_file.close();
 
@@ -202,42 +280,40 @@ bool CHudFmodPlayer::MsgFunc_FmodCache(const char* pszName, int iSize, void* pbu
 
 	soundcache_file.close();
 
-	// Create a vector of bools that will indicate whether or not to unload a sound
-	std::vector<bool> dont_unload(fmod_cached_sounds.size(), false);
-
-	// Loop through our cached sounds.
-	// Find should be faster on vectors than unsorted_map, so looping through fmod_cached_sounds and finding matches in sound_paths should be faster than vice versa.
-	// This is based on the assumption that fmod_cached_sounds and sound_paths will be roughly the same size, but either could be larger than the other.
-	// If we were really desparate to optimize load times, we could intelligently decide which one to loop through based on their respective sizes, but this should be fine.
-	auto cached_sounds_it = fmod_cached_sounds.begin();
-	while (cached_sounds_it != fmod_cached_sounds.end())
+	// Create a vector of all sounds files, cached or to be loaded, with no duplicates
+	std::vector<std::string> all_sounds(sound_paths);
+	auto sounds_it = fmod_cached_sounds.begin();
+	while (sounds_it != fmod_cached_sounds.end())
 	{
-		auto it = std::find(sound_paths.begin(), sound_paths.end(), cached_sounds_it->first);
-		if (it != sound_paths.end())
+		// Check if path is already in all_sounds
+		auto sound_path = std::find(all_sounds.begin(), all_sounds.end(), sounds_it->first);
+		if (sound_path != all_sounds.end())
 		{
-			// Found sound. Mark it as don't unload and remove the string from sound_paths
-			int index = it - sound_paths.begin(); // kinda hacky
-			dont_unload[index] = true;
-			sound_paths.erase(it); // remove so we don't load an already loaded sound
+			// If it's not already in all_sounds, add it
+			all_sounds.push_back(sounds_it->first);
 		}
 
-		cached_sounds_it++;
+		sounds_it++;
 	}
 
-	// Now run through and unload any sounds not marked to be kept
-	int index = 0; // hacky use of non-relational index. Consider replacing with something better.
-	cached_sounds_it = fmod_cached_sounds.begin();
-	while (cached_sounds_it != fmod_cached_sounds.end())
+	// For each sound path in all_sounds, check if it's already loaded and if we're trying to load it
+	for (size_t i = 0; i < all_sounds.size(); i++)
 	{
-		if (!dont_unload[index])
+		auto cached_sound = fmod_cached_sounds.find(all_sounds[i]);
+		auto load_sound = std::find(sound_paths.begin(), sound_paths.end(), all_sounds[i]);
+
+		// If the sound is already cached and we want to load it, remove it from sound_paths so we don't load it again
+		if (cached_sound != fmod_cached_sounds.end() && load_sound != sound_paths.end())
+			sound_paths.erase(load_sound);
+
+		// If the sound is cached but we don't want to load it, uncache it
+		else if (cached_sound != fmod_cached_sounds.end() && load_sound == sound_paths.end())
 		{
-			// Release resources related to this sound
-			cached_sounds_it->second->release();
-			fmod_cached_sounds.erase(cached_sounds_it);
+			cached_sound->second->release();
+			fmod_cached_sounds.erase(cached_sound);
 		}
 
-		cached_sounds_it++;
-		index++;
+		// If the sound is not cached but we want to load it, do nothing; it will remain in sound_paths and be loaded
 	}
 
 	// Finally, load any remaining sounds that we didn't carry over from the previous map
@@ -374,7 +450,15 @@ bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 
     // Set channel properties
 	fmod_current_track->setVolume(volume);
-	if (looping) fmod_current_track->setMode(FMOD_LOOP_NORMAL);
+	if (looping)
+	{
+		// TODO: See why this doesn't work as expected
+		/*FMOD_MODE mode;
+		fmod_current_track->getMode(&mode);
+		fmod_current_track->setMode(mode | FMOD_LOOP_NORMAL);*/
+
+		fmod_current_track->setMode(FMOD_LOOP_NORMAL);
+	}
 
 	fmod_current_track->setPitch(pitch);
 	fmod_current_track->setPaused(false);

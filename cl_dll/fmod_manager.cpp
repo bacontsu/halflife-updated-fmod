@@ -199,6 +199,11 @@ FMOD::Channel* Fmod_CreateChannel(FMOD::Sound* sound, const char* name, const Fm
 	channel->setVolume(volume);
 	if (loop)
 	{
+		// TODO: See why this doesn't work as expected
+		/* FMOD_MODE mode;
+		channel->getMode(&mode);
+		channel->setMode(mode | FMOD_LOOP_NORMAL);*/
+
 		channel->setMode(FMOD_LOOP_NORMAL);
 	}
 
