@@ -60,29 +60,59 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 		tracks_it++;
 	}
 
-	if (current_track_sound_name == "")
+	if (tracks_it == fmod_tracks.end())
 	{
 		_Fmod_Report("ERROR", "Could not find fmod_current_track for savefile!");
 		return false;
 	}
 
 	FMOD_MODE current_track_mode;
-	fmod_current_track->getMode(&current_track_mode);
-
 	float current_track_volume = 0.0f;
-	fmod_current_track->getVolume(&current_track_volume);
-
 	float current_track_pitch = 1.0f;
-	fmod_current_track->getPitch(&current_track_pitch);
-
 	unsigned int current_track_position = 0;
-	fmod_current_track->getPosition(&current_track_position, FMOD_TIMEUNIT_PCM);
-
 	bool current_track_paused = true;
+
+	fmod_current_track->getMode(&current_track_mode);
+	fmod_current_track->getVolume(&current_track_volume);
+	fmod_current_track->getPitch(&current_track_pitch);
+	fmod_current_track->getPosition(&current_track_position, FMOD_TIMEUNIT_PCM);
 	fmod_current_track->getPaused(&current_track_paused);
 
 	save_file << current_track_sound_name << " " << current_track_mode << " " << current_track_volume << " " << current_track_pitch
 			  << " " << current_track_position << " " << current_track_paused << std::endl;
+
+	auto channels_it = fmod_channels.begin();
+	while (channels_it != fmod_channels.end())
+	{
+		// channel entry: ENT_NAME SOUND_NAME MODE X Y Z VOLUME MINDIST MAXDIST PITCH POSITION PAUSED
+		FMOD::Channel *channel = channels_it->second;
+
+		FMOD_MODE mode;
+		FMOD_VECTOR pos;
+		FMOD_VECTOR vel; // unused
+		float volume = 0.0f;
+		float minDist = 40.0f;
+		float maxDist = 400000.0f;
+		float pitch = 1.0f;
+		unsigned int position = 0;
+		bool paused = true;
+
+		channel->getMode(&mode);
+		channel->get3DAttributes(&pos, &vel);
+		channel->getVolume(&volume);
+		channel->get3DMinMaxDistance(&minDist, &maxDist);
+		channel->getPitch(&pitch);
+		channel->getPosition(&position, FMOD_TIMEUNIT_PCM);
+		channel->getPaused(&paused);
+
+		save_file << channels_it->first << " " << mode << " " << pos.x << " " << pos.y << " " << pos.z << " " << volume << " " << minDist << " " << maxDist << " " << pitch << " " << position << " " << paused;
+
+		channels_it++;
+
+		if (channels_it != fmod_channels.end())
+			save_file << std::endl;
+	}
+
 	save_file.close();
 
 	return true;
