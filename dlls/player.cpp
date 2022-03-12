@@ -2912,7 +2912,7 @@ bool CBasePlayer::Save(CSave& save)
 	GET_GAME_DIR(gamedir);
 
 	// Create the save name string and copy it to the member field
-	std::string fmod_save_name = std::string(gamedir) + std::string("/save/") + std::string("fmod") + ts + ".fsv";
+	std::string fmod_save_name = std::string(gamedir) + std::string("/SAVE/") + std::string("fmod") + ts + ".fsv";
 	strncpy(this->m_fmodSaveName, fmod_save_name.c_str(), FMOD_SAVE_LENGTH-1);
 
 	// Tell fmod on the clientside to save

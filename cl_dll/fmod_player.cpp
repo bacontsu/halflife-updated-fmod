@@ -38,6 +38,53 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 
 	_Fmod_Report("INFO", "Saving the following file: " + filename);
 
+	std::ofstream save_file;
+	save_file.open(filename);
+
+	// fmod_current_track entry: SOUND_NAME MODE VOLUME PITCH POSITION PAUSED
+
+	FMOD::Sound *sound;
+	fmod_current_track->getCurrentSound(&sound);
+	std::string current_track_sound_name = "";
+	
+	// Do a quick and dirty find by value
+	auto tracks_it = fmod_tracks.begin();
+	while (tracks_it != fmod_tracks.end())
+	{
+		if (tracks_it->second == sound)
+		{
+			current_track_sound_name = tracks_it->first;
+			break;
+		}
+
+		tracks_it++;
+	}
+
+	if (current_track_sound_name == "")
+	{
+		_Fmod_Report("ERROR", "Could not find fmod_current_track for savefile!");
+		return false;
+	}
+
+	FMOD_MODE current_track_mode;
+	fmod_current_track->getMode(&current_track_mode);
+
+	float current_track_volume = 0.0f;
+	fmod_current_track->getVolume(&current_track_volume);
+
+	float current_track_pitch = 1.0f;
+	fmod_current_track->getPitch(&current_track_pitch);
+
+	unsigned int current_track_position = 0;
+	fmod_current_track->getPosition(&current_track_position, FMOD_TIMEUNIT_PCM);
+
+	bool current_track_paused = true;
+	fmod_current_track->getPaused(&current_track_paused);
+
+	save_file << current_track_sound_name << " " << current_track_mode << " " << current_track_volume << " " << current_track_pitch
+			  << " " << current_track_position << " " << current_track_paused << std::endl;
+	save_file.close();
+
 	return true;
 }
 
@@ -47,6 +94,48 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 	std::string filename = std::string(READ_STRING());
 
 	_Fmod_Report("INFO", "Loading the following file: " + filename);
+
+	bool mp3_paused = false;
+	bool sfx_paused = false;
+
+	fmod_mp3_group->getPaused(&mp3_paused);
+	fmod_sfx_group->getPaused(&sfx_paused);
+
+	fmod_mp3_group->setPaused(true);
+	fmod_sfx_group->setPaused(true);
+	//Fmod_Release_Channels();
+
+	std::ifstream save_file;
+	save_file.open(filename);
+
+	fmod_current_track->stop();
+
+	std::string current_track_sound_name = "";
+	FMOD_MODE current_track_mode;
+	float current_track_volume = 0.0f;
+	float current_track_pitch = 1.0f;
+	unsigned int current_track_position = 0;
+	bool current_track_paused = true;
+
+	save_file >> current_track_sound_name >> current_track_mode >> current_track_volume >> current_track_pitch >> current_track_position >> current_track_paused;
+
+	auto it = fmod_tracks.find(current_track_sound_name);
+	FMOD::Sound *current_track_sound = it->second;
+
+	FMOD_RESULT result = fmod_system->playSound(current_track_sound, fmod_mp3_group, true, &fmod_current_track);
+	if (!_Fmod_Result_OK(&result))
+		return false; // TODO: investigate if a failure here might create a memory leak
+
+	fmod_current_track->setMode(current_track_mode);
+	fmod_current_track->setVolume(current_track_volume);
+	fmod_current_track->setPitch(current_track_pitch);
+	fmod_current_track->setPosition(current_track_position, FMOD_TIMEUNIT_PCM);
+	fmod_current_track->setPaused(current_track_paused);
+
+	save_file.close();
+
+	fmod_mp3_group->setPaused(mp3_paused);
+	fmod_sfx_group->setPaused(sfx_paused);
 
 	return true;
 }

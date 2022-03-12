@@ -56,9 +56,11 @@ void CFmodTrack::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useT
 
 void CFmodTrack::SendMsg(void)
 {
+	// IF YOU MODIFY THIS DON'T FORGET TO UPDATE MsgFunc_FmodSave/Load
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodTrk, NULL);
 	WRITE_STRING(STRING(pev->message));
 	WRITE_BYTE(m_fLooping);
+	// TODO: just use floats here
 	WRITE_BYTE(pev->health); // Volume (0-255). 100 = 100% volume
 	WRITE_BYTE(pitch);		 // Pitch (0-255). 100 = normal pitch, 200 = one octave up
 	MESSAGE_END();

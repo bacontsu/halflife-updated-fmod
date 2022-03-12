@@ -59,6 +59,7 @@ void CFmodAmbient::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE us
 
 void CFmodAmbient::SendMsg(void)
 {
+	// IF YOU MODIFY THIS DON'T FORGET TO UPDATE MsgFunc_FmodSave/Load
 	// Name of the channel and path of the sound
 	std::string msg = STRING(pev->targetname) + std::string("\n") + STRING(pev->message);
 	// TODO: Figure out if we can truly only write one string in a message or if I'm doing something wrong
@@ -68,6 +69,7 @@ void CFmodAmbient::SendMsg(void)
 	WRITE_COORD(pev->origin.x);
 	WRITE_COORD(pev->origin.y);
 	WRITE_COORD(pev->origin.z);
+	// TODO: just use floats here
 	WRITE_BYTE(pev->health); // Volume (0-255). 100 = 100% volume
 	WRITE_SHORT(min_atten);	 // Min Attenuation Distance (0-32767)
 	WRITE_LONG(max_atten);	 // Max Attenuation Distance (0-2147483647)
