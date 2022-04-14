@@ -17,9 +17,10 @@ public:
 	bool m_fPlayOnStart;
 
 private:
-	int min_atten;
-	int max_atten;
-	int pitch;
+	float volume;
+	float min_atten;
+	float max_atten;
+	float pitch;
 };
 
 LINK_ENTITY_TO_CLASS(fmod_ambient, CFmodAmbient);
@@ -70,10 +71,10 @@ void CFmodAmbient::SendMsg(void)
 	WRITE_COORD(pev->origin.y);
 	WRITE_COORD(pev->origin.z);
 	// TODO: just use floats here
-	WRITE_BYTE(pev->health); // Volume (0-255). 100 = 100% volume
-	WRITE_SHORT(min_atten);	 // Min Attenuation Distance (0-32767)
-	WRITE_LONG(max_atten);	 // Max Attenuation Distance (0-2147483647)
-	WRITE_BYTE(pitch);		 // Pitch (0-255). 100 = normal pitch, 200 = one octave up
+	WRITE_COORD(volume); // Default: 1.0
+	WRITE_COORD(min_atten); // Default: 40.0
+	WRITE_COORD(max_atten); // Default: 40000.0
+	WRITE_COORD(pitch); // Default: 1.0 (2.0 = one octave up, 0.5 = one octave down)
 	MESSAGE_END();
 
 	// TODO: sanitize inputs
@@ -82,24 +83,31 @@ void CFmodAmbient::SendMsg(void)
 // Load key/value pairs
 bool CFmodAmbient::KeyValue(KeyValueData* pkvd)
 {
+	// volume
+	if (FStrEq(pkvd->szKeyName, "volume"))
+	{
+		volume = atof(pkvd->szValue);
+		return true;
+	}
+
 	// minatten
 	if (FStrEq(pkvd->szKeyName, "minatten"))
 	{
-		min_atten = atoi(pkvd->szValue);
+		min_atten = atof(pkvd->szValue);
 		return true;
 	}
 
 	// maxatten
 	else if (FStrEq(pkvd->szKeyName, "maxatten"))
 	{
-		max_atten = atoi(pkvd->szValue);
+		max_atten = atof(pkvd->szValue);
 		return true;
 	}
 
 	// pitch
 	else if (FStrEq(pkvd->szKeyName, "pitch"))
 	{
-		pitch = atoi(pkvd->szValue);
+		pitch = atof(pkvd->szValue);
 		return true;
 	}
 

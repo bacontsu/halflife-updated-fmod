@@ -345,12 +345,11 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	vel.y = 0;
 	vel.z = 0;
 
-	int vol_int = READ_BYTE(); // 0-255. 100 = 100% volume
-	float volume = vol_int / 100.0f; // convert 0-100 to 0-1.0 (floating point)
+	float volume = READ_COORD();
 
-	int min_atten = READ_SHORT(); // 0-32767
-	int max_atten = READ_LONG(); // 0-2147483647
-	float pitch = READ_BYTE() / 100.0f; // 0-255. 100 = normal pitch, 200 = one octave up
+	float min_atten = READ_COORD();
+	float max_atten = READ_COORD();
+	float pitch = READ_COORD();
 
 	// TODO: sanitize inputs
 
