@@ -17,7 +17,8 @@ public:
 	bool m_fPlayOnStart;
 
 private:
-	int pitch;
+	float volume;
+	float pitch;
 };
 
 LINK_ENTITY_TO_CLASS(fmod_track, CFmodTrack);
@@ -61,8 +62,8 @@ void CFmodTrack::SendMsg(void)
 	WRITE_STRING(STRING(pev->message));
 	WRITE_BYTE(m_fLooping);
 	// TODO: just use floats here
-	WRITE_BYTE(pev->health); // Volume (0-255). 100 = 100% volume
-	WRITE_BYTE(pitch);		 // Pitch (0-255). 100 = normal pitch, 200 = one octave up
+	WRITE_COORD(volume); // Default: 1.0
+	WRITE_COORD(pitch);	 // Default: 1.0 (2.0 = one octave up, 0.5 = one octave down)
 	MESSAGE_END();
 
 	// TODO: sanitize inputs
@@ -71,10 +72,17 @@ void CFmodTrack::SendMsg(void)
 // Load key/value pairs
 bool CFmodTrack::KeyValue(KeyValueData* pkvd)
 {
+	// volume
+	if (FStrEq(pkvd->szKeyName, "volume"))
+	{
+		volume = atof(pkvd->szValue);
+		return true;
+	}
+
 	// pitch
 	if (FStrEq(pkvd->szKeyName, "pitch"))
 	{
-		pitch = atoi(pkvd->szValue);
+		pitch = atof(pkvd->szValue);
 		return true;
 	}
 
