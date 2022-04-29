@@ -61,7 +61,6 @@ void CFmodTrack::SendMsg(void)
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodTrk, NULL);
 	WRITE_STRING(STRING(pev->message));
 	WRITE_BYTE(m_fLooping);
-	// TODO: just use floats here
 	WRITE_COORD(volume); // Default: 1.0
 	WRITE_COORD(pitch);	 // Default: 1.0 (2.0 = one octave up, 0.5 = one octave down)
 	MESSAGE_END();

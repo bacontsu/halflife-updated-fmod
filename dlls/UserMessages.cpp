@@ -70,6 +70,7 @@ void LinkUserMessages()
 	gmsgFmodCache = REG_USER_MSG("FmodCache", 0);
 	gmsgFmodAmb = REG_USER_MSG("FmodAmb", -1);
 	gmsgFmodTrk = REG_USER_MSG("FmodTrk", -1);
+	gmsgFmodRev = REG_USER_MSG("FmodRev", 11);
 	gmsgFmodPause = REG_USER_MSG("FmodPause", -1);
 	gmsgFmodSeek = REG_USER_MSG("FmodSeek", -1);
 	gmsgFmodSave = REG_USER_MSG("FmodSave", -1);

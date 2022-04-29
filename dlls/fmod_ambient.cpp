@@ -70,7 +70,6 @@ void CFmodAmbient::SendMsg(void)
 	WRITE_COORD(pev->origin.x);
 	WRITE_COORD(pev->origin.y);
 	WRITE_COORD(pev->origin.z);
-	// TODO: just use floats here
 	WRITE_COORD(volume); // Default: 1.0
 	WRITE_COORD(min_atten); // Default: 40.0
 	WRITE_COORD(max_atten); // Default: 40000.0

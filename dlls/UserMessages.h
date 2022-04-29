@@ -58,6 +58,7 @@ inline int gmsgWeapons = 0;
 inline int gmsgFmodCache = 0;
 inline int gmsgFmodAmb = 0;
 inline int gmsgFmodTrk = 0;
+inline int gmsgFmodRev = 0;
 inline int gmsgFmodPause = 0;
 inline int gmsgFmodSeek = 0;
 inline int gmsgFmodSave = 0;

@@ -13,6 +13,7 @@
 DECLARE_MESSAGE(m_Fmod, FmodCache)
 DECLARE_MESSAGE(m_Fmod, FmodAmb)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)
+DECLARE_MESSAGE(m_Fmod, FmodRev)
 DECLARE_MESSAGE(m_Fmod, FmodPause)
 DECLARE_MESSAGE(m_Fmod, FmodSeek)
 DECLARE_MESSAGE(m_Fmod, FmodSave)
@@ -23,6 +24,7 @@ bool CHudFmodPlayer::Init()
 	HOOK_MESSAGE(FmodCache);
 	HOOK_MESSAGE(FmodAmb);
 	HOOK_MESSAGE(FmodTrk);
+	HOOK_MESSAGE(FmodRev);
 	HOOK_MESSAGE(FmodPause);
 	HOOK_MESSAGE(FmodSeek);
 	HOOK_MESSAGE(FmodSave);
@@ -459,6 +461,27 @@ bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 
 	fmod_current_track->setPitch(pitch);
 	fmod_current_track->setPaused(false);
+
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodRev(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	Vector pos;
+	pos.x = READ_COORD();
+	pos.y = READ_COORD();
+	pos.z = READ_COORD();
+
+	float min_dist = READ_COORD();
+	float max_dist = READ_COORD();
+
+	int preset = READ_BYTE();
+
+	FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
+
+	Fmod_CreateReverbSphere(&fmod_reverb_properties[preset], &fmod_pos, min_dist, max_dist);
 
 	return true;
 }

@@ -17,9 +17,38 @@ Fmod_Group fmod_sfx_group;
 
 std::unordered_map<std::string, FMOD::Sound*> fmod_cached_sounds;
 std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
-
 std::unordered_map<std::string, FMOD::Sound*> fmod_tracks;
+
+std::vector<FMOD::Reverb3D*> fmod_reverb_spheres;
+
 FMOD::Channel* fmod_current_track;
+
+FMOD_REVERB_PROPERTIES fmod_reverb_properties[] = {
+	FMOD_PRESET_OFF,				//  0
+	FMOD_PRESET_GENERIC,			//  1
+	FMOD_PRESET_PADDEDCELL,			//  2
+	FMOD_PRESET_ROOM,				//  3
+	FMOD_PRESET_BATHROOM,			//  4
+	FMOD_PRESET_LIVINGROOM,			//  5
+	FMOD_PRESET_STONEROOM,			//  6
+	FMOD_PRESET_AUDITORIUM,			//  7
+	FMOD_PRESET_CONCERTHALL,		//  8
+	FMOD_PRESET_CAVE,				//  9
+	FMOD_PRESET_ARENA,				// 10
+	FMOD_PRESET_HANGAR,				// 11
+	FMOD_PRESET_CARPETTEDHALLWAY,	// 12
+	FMOD_PRESET_HALLWAY,			// 13
+	FMOD_PRESET_STONECORRIDOR,		// 14
+	FMOD_PRESET_ALLEY,				// 15
+	FMOD_PRESET_FOREST,				// 16
+	FMOD_PRESET_CITY,				// 17
+	FMOD_PRESET_MOUNTAINS,			// 18
+	FMOD_PRESET_QUARRY,				// 19
+	FMOD_PRESET_PLAIN,				// 20
+	FMOD_PRESET_PARKINGLOT,			// 21
+	FMOD_PRESET_SEWERPIPE,			// 22
+	FMOD_PRESET_UNDERWATER			// 23
+};
 
 bool Fmod_Init(void)
 {
@@ -183,6 +212,22 @@ FMOD::Sound* Fmod_CacheSound(const char* path, const bool is_track, const bool p
 	}
 
     return sound;
+}
+
+FMOD::Reverb3D* Fmod_CreateReverbSphere(const FMOD_REVERB_PROPERTIES* properties, const FMOD_VECTOR* pos, const float min_distance, const float max_distance)
+{
+	FMOD_RESULT result;
+	FMOD::Reverb3D* reverb_sphere = NULL;
+
+	result = fmod_system->createReverb3D(&reverb_sphere);
+	if (!_Fmod_Result_OK(&result)) return NULL; // TODO: investigate if a failure here might create a memory leak
+
+	reverb_sphere->setProperties(properties);
+	reverb_sphere->set3DAttributes(pos, min_distance, max_distance);
+
+	fmod_reverb_spheres.push_back(reverb_sphere);
+
+	return reverb_sphere;
 }
 
 FMOD::Channel* Fmod_CreateChannel(FMOD::Sound* sound, const char* name, const Fmod_Group &group, const bool loop, const float volume)
