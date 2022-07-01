@@ -129,7 +129,7 @@ int DLLEXPORT Initialize(cl_enginefunc_t* pEnginefuncs, int iVersion)
 		return 0;
 	}
 
-	if (!Fmod_Init())
+	if (!HLFMOD::Fmod_Init())
 	{
 		return 0;
 	}
@@ -248,7 +248,7 @@ void DLLEXPORT HUD_Frame(double time)
 {
 	//	RecClHudFrame(time);
 
-	Fmod_Update();
+	HLFMOD::Fmod_Update();
 	GetClientVoiceMgr()->Frame(time);
 }
 

@@ -10,6 +10,8 @@
 #include <fstream>
 #include <iostream>
 
+using namespace HLFMOD;
+
 DECLARE_MESSAGE(m_Fmod, FmodCache)
 DECLARE_MESSAGE(m_Fmod, FmodAmb)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)

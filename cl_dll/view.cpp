@@ -1641,7 +1641,7 @@ void DLLEXPORT V_CalcRefdef(struct ref_params_s* pparams)
 		V_CalcNormalRefdef(pparams);
 	}
 
-	Fmod_Think(pparams);
+	HLFMOD::Fmod_Think(pparams);
 
 	/*
 // Example of how to overlay the whole screen with red at 50 % alpha

@@ -3391,12 +3391,12 @@ void PM_Move(struct playermove_s* ppmove, qboolean server)
 
 	#ifdef CLIENT_DLL
 	// Update fmod listener
-	FMOD_VECTOR pos		= _Fmod_HLVecToFmodVec(pmove->origin);
-	FMOD_VECTOR vel		= _Fmod_HLVecToFmodVec(pmove->velocity);
-	FMOD_VECTOR forward = _Fmod_HLVecToFmodVec(pmove->forward);
-	FMOD_VECTOR up		= _Fmod_HLVecToFmodVec(pmove->up);
+	FMOD_VECTOR pos		= HLFMOD::_Fmod_HLVecToFmodVec(pmove->origin);
+	FMOD_VECTOR vel		= HLFMOD::_Fmod_HLVecToFmodVec(pmove->velocity);
+	FMOD_VECTOR forward = HLFMOD::_Fmod_HLVecToFmodVec(pmove->forward);
+	FMOD_VECTOR up		= HLFMOD::_Fmod_HLVecToFmodVec(pmove->up);
 
-	Fmod_Update_Listener_Position(&pos, &vel, NULL, NULL);
+	HLFMOD::Fmod_Update_Listener_Position(&pos, &vel, NULL, NULL);
 	#endif
 }
 
