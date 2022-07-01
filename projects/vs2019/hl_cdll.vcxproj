@@ -126,8 +126,8 @@
     <ClCompile Include="..\..\cl_dll\ev_common.cpp" />
     <ClCompile Include="..\..\cl_dll\ev_hldm.cpp" />
     <ClCompile Include="..\..\cl_dll\flashlight.cpp" />
-    <ClCompile Include="..\..\cl_dll\fmod_manager.cpp" />
-    <ClCompile Include="..\..\cl_dll\fmod_player.cpp" />
+    <ClCompile Include="..\..\cl_dll\fmod_impl.cpp" />
+    <ClCompile Include="..\..\cl_dll\fmod_client_player.cpp" />
     <ClCompile Include="..\..\cl_dll\GameStudioModelRenderer.cpp" />
     <ClCompile Include="..\..\cl_dll\geiger.cpp" />
     <ClCompile Include="..\..\cl_dll\health.cpp" />
@@ -211,7 +211,7 @@
     <ClInclude Include="..\..\cl_dll\demo.h" />
     <ClInclude Include="..\..\cl_dll\eventscripts.h" />
     <ClInclude Include="..\..\cl_dll\ev_hldm.h" />
-    <ClInclude Include="..\..\cl_dll\fmod_manager.h" />
+    <ClInclude Include="..\..\cl_dll\fmod_api.h" />
     <ClInclude Include="..\..\cl_dll\GameStudioModelRenderer.h" />
     <ClInclude Include="..\..\cl_dll\health.h" />
     <ClInclude Include="..\..\cl_dll\hud.h" />

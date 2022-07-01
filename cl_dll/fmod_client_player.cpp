@@ -3,7 +3,7 @@
 #include "extdll.h"
 #include "hud.h" // CHudFmodPlayer declared in hud.h
 #include "parsemsg.h"
-#include "fmod_manager.h"
+#include "fmod_api.h"
 #include "FMOD/fmod_errors.h"
 
 #include <map>

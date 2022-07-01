@@ -321,10 +321,10 @@
     <ClCompile Include="..\..\cl_dll\particleman\CBaseParticle.cpp">
       <Filter>Source Files\cl_dll\particleman</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\cl_dll\fmod_manager.cpp">
+    <ClCompile Include="..\..\cl_dll\fmod_impl.cpp">
       <Filter>Source Files\cl_dll</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\cl_dll\fmod_player.cpp">
+    <ClCompile Include="..\..\cl_dll\fmod_client_player.cpp">
       <Filter>Source Files\cl_dll</Filter>
     </ClCompile>
   </ItemGroup>
@@ -602,7 +602,7 @@
     <ClInclude Include="..\..\cl_dll\particleman\CBaseParticle.h">
       <Filter>Header Files\cl_dll\particleman</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\cl_dll\fmod_manager.h">
+    <ClInclude Include="..\..\cl_dll\fmod_api.h">
       <Filter>Header Files\cl_dll</Filter>
     </ClInclude>
   </ItemGroup>

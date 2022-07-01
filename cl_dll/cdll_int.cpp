@@ -36,7 +36,7 @@
 #include "vgui_TeamFortressViewport.h"
 #include "filesystem_utils.h"
 
-#include "fmod_manager.h"
+#include "fmod_api.h"
 
 cl_enginefunc_t gEngfuncs;
 CHud gHUD;

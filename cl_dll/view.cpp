@@ -20,7 +20,7 @@
 #include "hltv.h"
 #include "Exports.h"
 
-#include "fmod_manager.h"
+#include "fmod_api.h"
 
 int CL_IsThirdPerson();
 void CL_CameraOffset(float* ofs);

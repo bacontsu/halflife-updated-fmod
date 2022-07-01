@@ -30,7 +30,7 @@
 #include <ctype.h>	// isspace
 
 #ifdef CLIENT_DLL
-#include "fmod_manager.h"
+#include "fmod_api.h"
 #endif
 
 #ifdef CLIENT_DLL
