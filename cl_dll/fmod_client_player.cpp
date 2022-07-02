@@ -400,7 +400,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	float volume = READ_COORD();
 
 	float min_atten = READ_COORD();
-	float max_atten = READ_COORD();
+	float max_atten = READ_LONG();
 	float pitch = READ_COORD();
 
 	// TODO: sanitize inputs
