@@ -37,7 +37,10 @@ namespace HLFMOD
 	extern std::unordered_map<std::string, FMOD::Sound*> fmod_tracks;
 	extern FMOD::Channel *fmod_current_track;
 
-	extern FMOD_REVERB_PROPERTIES fmod_reverb_properties[];
+	typedef std::tuple<FMOD::Reverb3D*, uint8_t> Fmod_Reverb_Sphere;
+	extern std::vector<Fmod_Reverb_Sphere> fmod_reverb_spheres;
+
+	extern FMOD_REVERB_PROPERTIES fmod_reverb_presets[];
 
 	extern const float DEFAULT_MIN_ATTEN;
 	extern const float DEFAULT_MAX_ATTEN;
@@ -52,8 +55,8 @@ namespace HLFMOD
 
 	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track);
 	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track, const bool play_everywhere);
-	FMOD::Sound*	Fmod_GetCachedSound(const char* sound_path);
-	FMOD::Reverb3D* Fmod_CreateReverbSphere(const FMOD_REVERB_PROPERTIES* properties, const FMOD_VECTOR* pos, const float min_distance, const float max_distance);
+	FMOD::Sound*    Fmod_GetCachedSound(const char* sound_path);
+	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const FMOD_VECTOR* pos, const float min_distance, const float max_distance);
 	FMOD::Channel*  Fmod_CreateChannel(FMOD::Sound *sound, const char* name, const Fmod_Group &group, const bool loop, const float volume);
 
 	// These take HL Vectors as they're intended to be called from elsewhere in HL codebase

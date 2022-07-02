@@ -21,14 +21,14 @@ namespace HLFMOD
 	std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
 	std::unordered_map<std::string, FMOD::Sound*> fmod_tracks;
 
-	std::vector<FMOD::Reverb3D*> fmod_reverb_spheres;
+	std::vector<Fmod_Reverb_Sphere> fmod_reverb_spheres;
 
 	FMOD::Channel* fmod_current_track;
 
 	const float DEFAULT_MIN_ATTEN = 40.0f;
 	const float DEFAULT_MAX_ATTEN = 40000.0f;
 
-	FMOD_REVERB_PROPERTIES fmod_reverb_properties[] = {
+	FMOD_REVERB_PROPERTIES fmod_reverb_presets[] = {
 		FMOD_PRESET_OFF,				//  0
 		FMOD_PRESET_GENERIC,			//  1
 		FMOD_PRESET_PADDEDCELL,			//  2
@@ -232,7 +232,7 @@ namespace HLFMOD
 		return sound;
 	}
 
-	FMOD::Reverb3D* Fmod_CreateReverbSphere(const FMOD_REVERB_PROPERTIES* properties, const FMOD_VECTOR* pos, const float min_distance, const float max_distance)
+	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const FMOD_VECTOR* pos, const float min_distance, const float max_distance)
 	{
 		FMOD_RESULT result;
 		FMOD::Reverb3D* reverb_sphere = NULL;
@@ -240,10 +240,13 @@ namespace HLFMOD
 		result = fmod_system->createReverb3D(&reverb_sphere);
 		if (!_Fmod_Result_OK(&result)) return NULL; // TODO: investigate if a failure here might create a memory leak
 
-		reverb_sphere->setProperties(properties);
+		FMOD_REVERB_PROPERTIES properties = fmod_reverb_presets[preset];
+
+		reverb_sphere->setProperties(&properties);
 		reverb_sphere->set3DAttributes(pos, min_distance, max_distance);
 
-		fmod_reverb_spheres.push_back(reverb_sphere);
+		Fmod_Reverb_Sphere rev_tuple(reverb_sphere, preset);
+		fmod_reverb_spheres.push_back(rev_tuple);
 
 		return reverb_sphere;
 	}

@@ -52,41 +52,48 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 
 	FMOD::Sound *sound;
 	fmod_current_track->getCurrentSound(&sound);
-	std::string current_track_sound_name = "";
-	
-	// Do a quick and dirty find by value
-	auto tracks_it = fmod_tracks.begin();
-	while (tracks_it != fmod_tracks.end())
-	{
-		if (tracks_it->second == sound)
-		{
-			current_track_sound_name = tracks_it->first;
-			break;
-		}
+	std::string current_track_sound_name = "music/null.ogg";
 
-		tracks_it++;
-	}
-
-	if (tracks_it == fmod_tracks.end())
-	{
-		_Fmod_Report("ERROR", "Could not find fmod_current_track for savefile!");
-		return false;
-	}
-
-	FMOD_MODE current_track_mode;
+	FMOD_MODE current_track_mode = FMOD_2D;
 	float current_track_volume = 0.0f;
 	float current_track_pitch = 1.0f;
 	unsigned int current_track_position = 0;
 	bool current_track_paused = true;
+	
+	// Do a quick and dirty find by value
+	if (fmod_current_track)
+	{
+		auto tracks_it = fmod_tracks.begin();
+		while (tracks_it != fmod_tracks.end())
+		{
+			if (tracks_it->second == sound)
+			{
+				current_track_sound_name = tracks_it->first;
+				break;
+			}
 
-	fmod_current_track->getMode(&current_track_mode);
-	fmod_current_track->getVolume(&current_track_volume);
-	fmod_current_track->getPitch(&current_track_pitch);
-	fmod_current_track->getPosition(&current_track_position, FMOD_TIMEUNIT_PCM);
-	fmod_current_track->getPaused(&current_track_paused);
+			tracks_it++;
+		}
 
+		if (tracks_it == fmod_tracks.end())
+		{
+			_Fmod_Report("ERROR", "Could not find fmod_current_track for savefile!");
+			return false;
+		}
+
+		fmod_current_track->getMode(&current_track_mode);
+		fmod_current_track->getVolume(&current_track_volume);
+		fmod_current_track->getPitch(&current_track_pitch);
+		fmod_current_track->getPosition(&current_track_position, FMOD_TIMEUNIT_PCM);
+		fmod_current_track->getPaused(&current_track_paused);
+	}
+
+	// Save current track
 	save_file << current_track_sound_name << " " << current_track_mode << " " << current_track_volume << " " << current_track_pitch
 			  << " " << current_track_position << " " << current_track_paused << std::endl;
+
+	// Save number of channels
+	save_file << fmod_channels.size() << std::endl;
 
 	auto channels_it = fmod_channels.begin();
 	while (channels_it != fmod_channels.end())
@@ -142,8 +149,25 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 
 		channels_it++;
 
-		if (channels_it != fmod_channels.end())
-			save_file << std::endl;
+		//if (channels_it != fmod_channels.end())
+		save_file << std::endl;
+	}
+
+	// Save number of reverb spheres
+	save_file << fmod_reverb_spheres.size() << std::endl;
+
+	for (int i = 0; i < fmod_reverb_spheres.size(); i++)
+	{
+		FMOD::Reverb3D* reverb_sphere = std::get<0>(fmod_reverb_spheres[i]);
+		int preset = std::get<1>(fmod_reverb_spheres[i]);
+
+		FMOD_VECTOR vec;
+		float min_dist;
+		float max_dist;
+
+		reverb_sphere->get3DAttributes(&vec, &min_dist, &max_dist);
+
+		save_file << preset << " " << vec.x << " " << vec.y << " " << vec.z << " " << min_dist << " " << max_dist << std::endl;
 	}
 
 	save_file.close();
@@ -203,7 +227,12 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 	fmod_current_track->setPosition(current_track_position, FMOD_TIMEUNIT_PCM);
 	fmod_current_track->setPaused(current_track_paused);
 
-	while (!save_file.eof())
+	// Get number of channels
+	int num_channels;
+	save_file >> num_channels;
+	// TODO: verify we didn't reach EOF
+
+	for (int i = 0; i < num_channels; i++)
 	{
 		std::string ent_name = "";
 		std::string sound_name = "";
@@ -244,6 +273,22 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 		channel->setPitch(pitch);
 		channel->setPosition(position, FMOD_TIMEUNIT_PCM);
 		channel->setPaused(paused);
+	}
+
+	// Get number of reverb spheres
+	int num_reverb_spheres;
+	save_file >> num_reverb_spheres;
+
+	for (int i = 0; i < num_reverb_spheres; i++)
+	{
+		int preset;
+		FMOD_VECTOR vec;
+		float min_dist;
+		float max_dist;
+
+		save_file >> preset >> vec.x >> vec.y >> vec.z >> min_dist >> max_dist;
+
+		Fmod_CreateReverbSphere(preset, &vec, min_dist, max_dist);
 	}
 
 	save_file.close();
@@ -510,7 +555,7 @@ bool CHudFmodPlayer::MsgFunc_FmodRev(const char* pszName, int iSize, void* pbuf)
 
 	FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
 
-	Fmod_CreateReverbSphere(&fmod_reverb_properties[preset], &fmod_pos, min_dist, max_dist);
+	Fmod_CreateReverbSphere(preset, &fmod_pos, min_dist, max_dist);
 
 	return true;
 }
