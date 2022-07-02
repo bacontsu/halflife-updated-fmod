@@ -80,6 +80,20 @@ namespace HLFMOD
 		fmod_sfx_group->setVolume(1.0f);
 
 		_Fmod_Update_Volume();
+		
+		// update position
+		Vector playerForward, playerUp;
+
+		// Get the forward and up vector
+		gEngfuncs.pfnAngleVectors(gHUD.playerAngles, playerForward, nullptr, playerUp);
+
+		// Converting these Vectors into FMOD vectors
+		FMOD_VECTOR FMODPlayerPosition = _Fmod_HLVecToFmodVec(gHUD.playerOrigin);
+		FMOD_VECTOR FMODPlayerVelocity = _Fmod_HLVecToFmodVec(gHUD.playerSpeed);
+		FMOD_VECTOR FMODPlayerForward = _Fmod_HLVecToFmodVec(playerForward);
+		FMOD_VECTOR FMODPlayerUp = _Fmod_HLVecToFmodVec(playerUp);
+
+		Fmod_Update_Listener_Position(&FMODPlayerPosition, &FMODPlayerVelocity, &FMODPlayerForward, &FMODPlayerUp);
 
 		// TODO: Allow customizing doppler and rolloff scale in a cfg
 		fmod_system->set3DSettings(1.0f, 40, 1.0f);
