@@ -156,7 +156,7 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 	// Save number of reverb spheres
 	save_file << fmod_reverb_spheres.size() << std::endl;
 
-	for (int i = 0; i < fmod_reverb_spheres.size(); i++)
+	for (size_t i = 0; i < fmod_reverb_spheres.size(); i++)
 	{
 		FMOD::Reverb3D* reverb_sphere = std::get<0>(fmod_reverb_spheres[i]);
 		int preset = std::get<1>(fmod_reverb_spheres[i]);
