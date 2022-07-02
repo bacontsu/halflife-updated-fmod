@@ -549,7 +549,7 @@ bool CHudFmodPlayer::MsgFunc_FmodRev(const char* pszName, int iSize, void* pbuf)
 	pos.z = READ_COORD();
 
 	float min_dist = READ_COORD();
-	float max_dist = READ_COORD();
+	long max_dist = READ_LONG();
 
 	int preset = READ_BYTE();
 
