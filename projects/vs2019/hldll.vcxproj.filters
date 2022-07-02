@@ -372,6 +372,12 @@
     <ClCompile Include="..\..\dlls\fmod_track.cpp">
       <Filter>Source Files\dlls</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\dlls\fmod_reverb.cpp">
+      <Filter>Source Files\dlls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dlls\fmod_server_utils.cpp">
+      <Filter>Source Files\dlls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\dlls\doors.h">
@@ -625,6 +631,9 @@
     </ClInclude>
     <ClInclude Include="..\..\public\interface.h">
       <Filter>Header Files\public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\dlls\fmod_server_util.h">
+      <Filter>Header Files\dlls</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

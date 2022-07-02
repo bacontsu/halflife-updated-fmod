@@ -3,16 +3,20 @@
 #include "extdll.h"
 #include "hud.h" // CHudFmodPlayer declared in hud.h
 #include "parsemsg.h"
-#include "fmod_manager.h"
+#include "fmod_api.h"
 #include "FMOD/fmod_errors.h"
 
 #include <map>
 #include <fstream>
 #include <iostream>
 
+using namespace HLFMOD;
+
 DECLARE_MESSAGE(m_Fmod, FmodCache)
 DECLARE_MESSAGE(m_Fmod, FmodAmb)
+DECLARE_MESSAGE(m_Fmod, FmodEmit)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)
+DECLARE_MESSAGE(m_Fmod, FmodRev)
 DECLARE_MESSAGE(m_Fmod, FmodPause)
 DECLARE_MESSAGE(m_Fmod, FmodSeek)
 DECLARE_MESSAGE(m_Fmod, FmodSave)
@@ -22,7 +26,9 @@ bool CHudFmodPlayer::Init()
 {
 	HOOK_MESSAGE(FmodCache);
 	HOOK_MESSAGE(FmodAmb);
+	HOOK_MESSAGE(FmodEmit);
 	HOOK_MESSAGE(FmodTrk);
+	HOOK_MESSAGE(FmodRev);
 	HOOK_MESSAGE(FmodPause);
 	HOOK_MESSAGE(FmodSeek);
 	HOOK_MESSAGE(FmodSave);
@@ -273,6 +279,7 @@ bool CHudFmodPlayer::MsgFunc_FmodCache(const char* pszName, int iSize, void* pbu
 	else _Fmod_Report("INFO", "Precaching sounds from file: " + soundcache_path);
 
 	std::string filename;
+	// TODO: allow writing if it's a 2D or 3D sound to file
 	while (std::getline(soundcache_file, filename)) sound_paths.push_back(filename);
 
 	if (!soundcache_file.eof())
@@ -414,6 +421,30 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	return true;
 }
 
+bool CHudFmodPlayer::MsgFunc_FmodEmit(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	std::string msg = std::string(READ_STRING());
+	bool looping = READ_BYTE();
+
+	Vector pos;
+	pos.x = READ_COORD();
+	pos.y = READ_COORD();
+	pos.z = READ_COORD();
+
+	float volume = READ_COORD();
+
+	float min_atten = READ_COORD();
+	float max_atten = READ_COORD();
+	float pitch = READ_COORD();
+
+	FMOD::Sound* sound = Fmod_GetCachedSound(msg.c_str());
+
+	Fmod_EmitSound(sound, "EMITFROMSERVER", looping, volume, pos, min_atten, max_atten, pitch);
+
+	return true;
+}
+
 bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
@@ -459,6 +490,27 @@ bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 
 	fmod_current_track->setPitch(pitch);
 	fmod_current_track->setPaused(false);
+
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodRev(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	Vector pos;
+	pos.x = READ_COORD();
+	pos.y = READ_COORD();
+	pos.z = READ_COORD();
+
+	float min_dist = READ_COORD();
+	float max_dist = READ_COORD();
+
+	int preset = READ_BYTE();
+
+	FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
+
+	Fmod_CreateReverbSphere(&fmod_reverb_properties[preset], &fmod_pos, min_dist, max_dist);
 
 	return true;
 }

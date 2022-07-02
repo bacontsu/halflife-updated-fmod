@@ -30,7 +30,7 @@
 #include <ctype.h>	// isspace
 
 #ifdef CLIENT_DLL
-#include "fmod_manager.h"
+#include "fmod_api.h"
 #endif
 
 #ifdef CLIENT_DLL
@@ -3388,6 +3388,7 @@ void PM_Move(struct playermove_s* ppmove, qboolean server)
 	{
 		pmove->friction = 1.0f;
 	}
+
 }
 
 int PM_GetVisEntInfo(int ent)
