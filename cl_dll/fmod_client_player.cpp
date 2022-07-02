@@ -14,6 +14,7 @@ using namespace HLFMOD;
 
 DECLARE_MESSAGE(m_Fmod, FmodCache)
 DECLARE_MESSAGE(m_Fmod, FmodAmb)
+DECLARE_MESSAGE(m_Fmod, FmodEmit)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)
 DECLARE_MESSAGE(m_Fmod, FmodRev)
 DECLARE_MESSAGE(m_Fmod, FmodPause)
@@ -25,6 +26,7 @@ bool CHudFmodPlayer::Init()
 {
 	HOOK_MESSAGE(FmodCache);
 	HOOK_MESSAGE(FmodAmb);
+	HOOK_MESSAGE(FmodEmit);
 	HOOK_MESSAGE(FmodTrk);
 	HOOK_MESSAGE(FmodRev);
 	HOOK_MESSAGE(FmodPause);
@@ -277,6 +279,7 @@ bool CHudFmodPlayer::MsgFunc_FmodCache(const char* pszName, int iSize, void* pbu
 	else _Fmod_Report("INFO", "Precaching sounds from file: " + soundcache_path);
 
 	std::string filename;
+	// TODO: allow writing if it's a 2D or 3D sound to file
 	while (std::getline(soundcache_file, filename)) sound_paths.push_back(filename);
 
 	if (!soundcache_file.eof())
@@ -414,6 +417,30 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		channel->getPaused(&paused);
 		channel->setPaused(!paused);
 	}
+
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodEmit(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	std::string msg = std::string(READ_STRING());
+	bool looping = READ_BYTE();
+
+	Vector pos;
+	pos.x = READ_COORD();
+	pos.y = READ_COORD();
+	pos.z = READ_COORD();
+
+	float volume = READ_COORD();
+
+	float min_atten = READ_COORD();
+	float max_atten = READ_COORD();
+	float pitch = READ_COORD();
+
+	FMOD::Sound* sound = Fmod_GetCachedSound(msg.c_str());
+
+	Fmod_EmitSound(sound, "EMITFROMSERVER", looping, volume, pos, min_atten, max_atten, pitch);
 
 	return true;
 }

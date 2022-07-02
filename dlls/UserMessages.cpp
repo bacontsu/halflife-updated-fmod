@@ -69,6 +69,7 @@ void LinkUserMessages()
 	// NOTE: Message name can't be too long
 	gmsgFmodCache = REG_USER_MSG("FmodCache", 0);
 	gmsgFmodAmb = REG_USER_MSG("FmodAmb", -1);
+	gmsgFmodEmit = REG_USER_MSG("FmodEmit", -1);
 	gmsgFmodTrk = REG_USER_MSG("FmodTrk", -1);
 	gmsgFmodRev = REG_USER_MSG("FmodRev", 11);
 	gmsgFmodPause = REG_USER_MSG("FmodPause", -1);

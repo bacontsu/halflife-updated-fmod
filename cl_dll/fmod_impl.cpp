@@ -25,6 +25,9 @@ namespace HLFMOD
 
 	FMOD::Channel* fmod_current_track;
 
+	const float DEFAULT_MIN_ATTEN = 40;
+	const float DEFAULT_MAX_ATTEN = 40000;
+
 	FMOD_REVERB_PROPERTIES fmod_reverb_properties[] = {
 		FMOD_PRESET_OFF,				//  0
 		FMOD_PRESET_GENERIC,			//  1
@@ -194,7 +197,7 @@ namespace HLFMOD
 		// Create the sound/stream from the file on disk
 		if (is_track)
 		{
-			result = fmod_system->createStream(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
+			result = fmod_system->createStream(full_path.c_str(), FMOD_2D, NULL, &sound);
 			if (!_Fmod_Result_OK(&result)) return NULL; // TODO: investigate if a failure here might create a memory leak
 
 			// If all went okay, insert the track into the cache
@@ -203,7 +206,7 @@ namespace HLFMOD
 		else
 		{
 			if (play_everywhere)
-				result = fmod_system->createSound(full_path.c_str(), FMOD_DEFAULT, NULL, &sound);
+				result = fmod_system->createSound(full_path.c_str(), FMOD_2D, NULL, &sound);
 			else
 				result = fmod_system->createSound(full_path.c_str(), FMOD_3D, NULL, &sound);
 
@@ -256,6 +259,65 @@ namespace HLFMOD
 
 		// If all went okay, stick it in the channel list. Only looping sounds store a reference.
 		fmod_channels.insert(std::pair(name, channel));
+
+		return channel;
+	}
+
+	FMOD::Sound* Fmod_GetCachedSound(const char* sound_path)
+	{
+		FMOD::Sound* sound = nullptr;
+
+		auto sound_iter = fmod_cached_sounds.find(sound_path);
+
+		if (sound_iter == fmod_cached_sounds.end())
+		{
+			_Fmod_Report("WARNING", "Trying to play uncached sound " + std::string(sound_path) +
+										". Add the sound to your [MAPNAME].bsp_soundcache.txt file.");
+			_Fmod_Report("INFO", "Attempting to cache and play sound " + std::string(sound_path));
+			sound = Fmod_CacheSound(sound_path, false);
+		}
+		else
+			sound = sound_iter->second;
+
+		return sound;
+	}
+
+	FMOD::Channel* Fmod_EmitSound(const char* sound_path, float volume)
+	{
+		FMOD::Sound* sound = Fmod_GetCachedSound(sound_path);
+
+		Vector dummyVec;
+		return Fmod_EmitSound(sound, "NONAME", false, volume, dummyVec, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
+	}
+	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, float volume)
+	{
+		Vector dummyVec;
+		return Fmod_EmitSound(sound, "NONAME", false, volume, dummyVec, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
+	}
+
+	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, const Vector& pos)
+	{
+		return Fmod_EmitSound(sound, channel_name, false, volume, pos, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
+	}
+
+	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, bool looping, const Vector& pos, float min_atten, float max_atten, float pitch)
+	{
+		FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
+		FMOD_VECTOR vel;
+		vel.x = 0;
+		vel.y = 0;
+		vel.z = 0;
+
+		FMOD::Channel* channel = NULL;
+
+		// Always create a new channel for EmitSound
+		channel = Fmod_CreateChannel(sound, channel_name, fmod_sfx_group, looping, volume);
+		if (!channel) return nullptr; // TODO: Report warning about failure to play here
+
+		channel->set3DAttributes(&fmod_pos, &vel);
+		channel->set3DMinMaxDistance(min_atten, max_atten);
+		channel->setPitch(pitch);
+		channel->setPaused(false);
 
 		return channel;
 	}

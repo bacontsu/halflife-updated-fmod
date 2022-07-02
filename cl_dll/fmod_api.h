@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include "FMOD/fmod.hpp"
+#include "vector.h"
 
 /* Notes on terminology: 
 As far as fmod is concerned, a "sound" corresponds to a file on disk, but a "channel" is what you 
@@ -38,6 +39,9 @@ namespace HLFMOD
 
 	extern FMOD_REVERB_PROPERTIES fmod_reverb_properties[];
 
+	extern const float DEFAULT_MIN_ATTEN;
+	extern const float DEFAULT_MAX_ATTEN;
+
 	bool Fmod_Init(void);
 	void Fmod_Update(void);
 	void Fmod_Think(struct ref_params_s *pparams);
@@ -48,8 +52,15 @@ namespace HLFMOD
 
 	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track);
 	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track, const bool play_everywhere);
+	FMOD::Sound*	Fmod_GetCachedSound(const char* sound_path);
 	FMOD::Reverb3D* Fmod_CreateReverbSphere(const FMOD_REVERB_PROPERTIES* properties, const FMOD_VECTOR* pos, const float min_distance, const float max_distance);
 	FMOD::Channel*  Fmod_CreateChannel(FMOD::Sound *sound, const char* name, const Fmod_Group &group, const bool loop, const float volume);
+
+	// These take HL Vectors as they're intended to be called from elsewhere in HL codebase
+	FMOD::Channel* Fmod_EmitSound(const char* sound_path, float volume);
+	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, float volume);
+	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, const Vector& pos);
+	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, bool looping, const Vector& pos, float min_atten, float max_atten, float pitch);
 
 	void _Fmod_LoadTracks(void);
 	void _Fmod_Update_Volume(void);
