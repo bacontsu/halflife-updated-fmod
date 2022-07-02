@@ -4,8 +4,8 @@
 #include "UserMessages.h"
 #include "fmod_server_util.h"
 
-#define DEFAULT_MIN_ATTEN 40
-#define DEFAULT_MAX_ATTEN 40000
+#define DEFAULT_MIN_ATTEN 40.0f
+#define DEFAULT_MAX_ATTEN 40000.0f
 
 namespace HLFMOD
 {
@@ -22,7 +22,7 @@ namespace HLFMOD
 
 	void UTIL_EmitSound(const char* sound_path, float volume, bool looping, const Vector& pos, float min_atten, float max_atten, float pitch)
 	{
-		MESSAGE_BEGIN(MSG_ALL, gmsgFmodAmb, NULL);
+		MESSAGE_BEGIN(MSG_ALL, gmsgFmodEmit, NULL);
 		WRITE_STRING(sound_path);
 		WRITE_BYTE(looping);
 		WRITE_COORD(pos.x);
@@ -30,7 +30,7 @@ namespace HLFMOD
 		WRITE_COORD(pos.z);
 		WRITE_COORD(volume);	
 		WRITE_COORD(min_atten); 
-		WRITE_COORD(max_atten); 
+		WRITE_LONG((long)max_atten); // for some reason this refuses to work as a float. +/- 1 inch shouldn't matter for max_atten though.
 		WRITE_COORD(pitch);		
 		MESSAGE_END();
 	}

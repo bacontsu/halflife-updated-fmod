@@ -435,12 +435,12 @@ bool CHudFmodPlayer::MsgFunc_FmodEmit(const char* pszName, int iSize, void* pbuf
 	float volume = READ_COORD();
 
 	float min_atten = READ_COORD();
-	float max_atten = READ_COORD();
+	float max_atten = READ_LONG();
 	float pitch = READ_COORD();
 
 	FMOD::Sound* sound = Fmod_GetCachedSound(msg.c_str());
 
-	Fmod_EmitSound(sound, "EMITFROMSERVER", looping, volume, pos, min_atten, max_atten, pitch);
+	Fmod_EmitSound(sound, "EMITFROMSERVER", volume, looping, pos, min_atten, max_atten, pitch);
 
 	return true;
 }

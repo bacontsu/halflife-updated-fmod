@@ -25,8 +25,8 @@ namespace HLFMOD
 
 	FMOD::Channel* fmod_current_track;
 
-	const float DEFAULT_MIN_ATTEN = 40;
-	const float DEFAULT_MAX_ATTEN = 40000;
+	const float DEFAULT_MIN_ATTEN = 40.0f;
+	const float DEFAULT_MAX_ATTEN = 40000.0f;
 
 	FMOD_REVERB_PROPERTIES fmod_reverb_properties[] = {
 		FMOD_PRESET_OFF,				//  0
@@ -100,8 +100,8 @@ namespace HLFMOD
 		_Fmod_Update_Volume();
 
 		// Get the forward and up vector
-		Vector playerForward, playerUp;
-		gEngfuncs.pfnAngleVectors(gHUD.playerAngles, playerForward, nullptr, playerUp);
+		Vector playerForward, playerRight, playerUp;
+		gEngfuncs.pfnAngleVectors(gHUD.playerAngles, playerForward, playerRight, playerUp);
 
 		// Converting these Vectors into FMOD vectors
 		FMOD_VECTOR FMODPlayerPosition	= _Fmod_HLVecToFmodVec(gHUD.playerOrigin);
@@ -300,17 +300,18 @@ namespace HLFMOD
 		FMOD::Sound* sound = Fmod_GetCachedSound(sound_path);
 
 		Vector dummyVec;
-		return Fmod_EmitSound(sound, "NONAME", false, volume, dummyVec, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
+		return Fmod_EmitSound(sound, "NONAME", volume, false, dummyVec, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
 	}
+
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, float volume)
 	{
 		Vector dummyVec;
-		return Fmod_EmitSound(sound, "NONAME", false, volume, dummyVec, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
+		return Fmod_EmitSound(sound, "NONAME", volume, false, dummyVec, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
 	}
 
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, const Vector& pos)
 	{
-		return Fmod_EmitSound(sound, channel_name, false, volume, pos, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
+		return Fmod_EmitSound(sound, channel_name, volume, false, pos, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
 	}
 
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, bool looping, const Vector& pos, float min_atten, float max_atten, float pitch)
