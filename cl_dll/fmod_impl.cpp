@@ -199,13 +199,22 @@ namespace HLFMOD
 		return Fmod_CacheSound(path, is_track, false);
 	}
 
-	FMOD::Sound* Fmod_CacheSound(const char* path, const bool is_track, const bool play_everywhere)
+	FMOD::Sound* Fmod_CacheSound(const char* path, const bool is_track, bool play_everywhere)
 	{
 		FMOD_RESULT result;
 		FMOD::Sound *sound = NULL;
 
 		std::string gamedir = gEngfuncs.pfnGetGameDirectory();
 		std::string full_path = gamedir + "/" + path; 
+
+		// override play_everywhere if filename ends in _2D
+		int ext_period_index = full_path.find_last_of('.');
+		if (full_path[ext_period_index - 3] == '_' &&
+			full_path[ext_period_index - 2] == '2' &&
+			full_path[ext_period_index - 1] == 'D')
+		{
+			play_everywhere = true;
+		}
 
 		// Create the sound/stream from the file on disk
 		if (is_track)

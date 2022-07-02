@@ -54,7 +54,7 @@ namespace HLFMOD
 	void Fmod_Shutdown(void);
 
 	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track);
-	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track, const bool play_everywhere);
+	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track, bool play_everywhere);
 	FMOD::Sound*    Fmod_GetCachedSound(const char* sound_path);
 	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const FMOD_VECTOR* pos, const float min_distance, const float max_distance);
 	FMOD::Channel*  Fmod_CreateChannel(FMOD::Sound *sound, const char* name, const Fmod_Group &group, const bool loop, const float volume);
