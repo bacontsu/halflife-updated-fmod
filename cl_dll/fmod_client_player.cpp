@@ -3,6 +3,7 @@
 #include "extdll.h"
 #include "hud.h" // CHudFmodPlayer declared in hud.h
 #include "parsemsg.h"
+#include "vector.h"
 #include "fmod_api.h"
 #include "FMOD/fmod_errors.h"
 
@@ -106,8 +107,9 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 		FMOD_VECTOR pos;
 		FMOD_VECTOR vel; // unused
 		float volume = 0.0f;
-		float minDist = 40.0f;
-		float maxDist = 400000.0f;
+		// min_dist and max_dist are saved in Fmod units and loaded in Fmod units
+		float min_dist = DEFAULT_MIN_ATTEN;
+		float max_dist = DEFAULT_MAX_ATTEN;
 		float pitch = 1.0f;
 		unsigned int position = 0;
 		bool paused = true;
@@ -115,7 +117,7 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 		channel->getMode(&mode);
 		channel->get3DAttributes(&pos, &vel);
 		channel->getVolume(&volume);
-		channel->get3DMinMaxDistance(&minDist, &maxDist);
+		channel->get3DMinMaxDistance(&min_dist, &max_dist);
 		channel->getPitch(&pitch);
 		channel->getPosition(&position, FMOD_TIMEUNIT_PCM);
 		channel->getPaused(&paused);
@@ -145,7 +147,7 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 		}
 
 		save_file << ent_name << " " << sound_name << " " << mode << " " << pos.x << " " << pos.y << " " << pos.z
-			<< " " << volume << " " << minDist << " " << maxDist << " " << pitch << " " << position << " " << paused;
+			<< " " << volume << " " << min_dist << " " << max_dist << " " << pitch << " " << position << " " << paused;
 
 		channels_it++;
 
@@ -162,6 +164,7 @@ bool CHudFmodPlayer::MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf
 		int preset = std::get<1>(fmod_reverb_spheres[i]);
 
 		FMOD_VECTOR vec;
+		// min_dist and max_dist are saved in Fmod units and loaded in Fmod units
 		float min_dist;
 		float max_dist;
 
@@ -240,13 +243,14 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 		FMOD_VECTOR pos;
 		FMOD_VECTOR vel; // unused
 		float volume = 0.0f;
-		float minDist = 40.0f;
-		float maxDist = 400000.0f;
+		// min_dist and max_dist are saved in Fmod units and loaded in Fmod units
+		float min_dist = DEFAULT_MIN_ATTEN;
+		float max_dist = DEFAULT_MAX_ATTEN;
 		float pitch = 1.0f;
 		unsigned int position = 0;
 		bool paused = true;
 
-		save_file >> ent_name >> sound_name >> mode >> pos.x >> pos.y >> pos.z >> volume >> minDist >> maxDist >> pitch >> position >> paused;
+		save_file >> ent_name >> sound_name >> mode >> pos.x >> pos.y >> pos.z >> volume >> min_dist >> max_dist >> pitch >> position >> paused;
 		vel.x = 0; vel.y = 0; vel.z = 0;
 
 		FMOD::Sound *sound = nullptr;
@@ -269,7 +273,7 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 		FMOD::Channel *channel = Fmod_CreateChannel(sound, ent_name.c_str(), fmod_sfx_group, false, volume);
 		channel->setMode(mode);
 		channel->set3DAttributes(&pos, &vel);
-		channel->set3DMinMaxDistance(minDist, maxDist);
+		channel->set3DMinMaxDistance(min_dist, max_dist);
 		channel->setPitch(pitch);
 		channel->setPosition(position, FMOD_TIMEUNIT_PCM);
 		channel->setPaused(paused);
@@ -282,13 +286,14 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 	for (int i = 0; i < num_reverb_spheres; i++)
 	{
 		int preset;
-		FMOD_VECTOR vec;
+		Vector vec;
+		// min_dist and max_dist are saved in Fmod units and loaded in Fmod units
 		float min_dist;
 		float max_dist;
 
 		save_file >> preset >> vec.x >> vec.y >> vec.z >> min_dist >> max_dist;
 
-		Fmod_CreateReverbSphere(preset, &vec, min_dist, max_dist);
+		Fmod_CreateReverbSphere(preset, vec, min_dist, max_dist);
 	}
 
 	save_file.close();
@@ -399,8 +404,9 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 
 	float volume = READ_FLOAT();
 
-	float min_atten = READ_FLOAT();
-	float max_atten = READ_FLOAT();
+	// We call set3DMinMaxDistance directly in this function so we need to convert these to fmod units (meters)
+	float min_atten_meters = READ_FLOAT() * HLUNITS_TO_METERS;
+	float max_atten_meters = READ_FLOAT() * HLUNITS_TO_METERS;
 	float pitch = READ_FLOAT();
 
 	// TODO: sanitize inputs
@@ -435,7 +441,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		if (!channel) return false; // TODO: Report warning about failure to play here
 
 		channel->set3DAttributes(&fmod_pos, &vel);
-		channel->set3DMinMaxDistance(min_atten, max_atten);
+		channel->set3DMinMaxDistance(min_atten_meters, max_atten_meters);
 		channel->setPitch(pitch);
 		channel->setPaused(false);
 	}
@@ -454,7 +460,7 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		else channel = channel_iter->second;
 
 		channel->set3DAttributes(&fmod_pos, &vel);
-		channel->set3DMinMaxDistance(min_atten, max_atten);
+		channel->set3DMinMaxDistance(min_atten_meters, max_atten_meters);
 		channel->setPitch(pitch);
 
 		// When a looping fmod_ambient gets used, by default it'll flip the status of paused
@@ -553,9 +559,7 @@ bool CHudFmodPlayer::MsgFunc_FmodRev(const char* pszName, int iSize, void* pbuf)
 
 	int preset = READ_BYTE();
 
-	FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
-
-	Fmod_CreateReverbSphere(preset, &fmod_pos, min_dist, max_dist);
+	Fmod_CreateReverbSphere(preset, pos, min_dist, max_dist);
 
 	return true;
 }

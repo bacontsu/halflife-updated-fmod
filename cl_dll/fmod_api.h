@@ -42,13 +42,15 @@ namespace HLFMOD
 
 	extern FMOD_REVERB_PROPERTIES fmod_reverb_presets[];
 
+	extern const float METERS_TO_HLUNITS;
+	extern const float HLUNITS_TO_METERS;
 	extern const float DEFAULT_MIN_ATTEN;
 	extern const float DEFAULT_MAX_ATTEN;
 
 	bool Fmod_Init(void);
 	void Fmod_Update(void);
 	void Fmod_Think(struct ref_params_s *pparams);
-	void Fmod_Update_Listener_Position(FMOD_VECTOR* pos, FMOD_VECTOR* vel, FMOD_VECTOR* forward, FMOD_VECTOR* up);
+	void Fmod_Update_Listener_Position(const Vector& pos, const Vector& vel, const Vector& forward, const Vector& up);
 	void Fmod_Release_Sounds(void);
 	void Fmod_Release_Channels(void);
 	void Fmod_Shutdown(void);
@@ -56,10 +58,9 @@ namespace HLFMOD
 	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track);
 	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track, bool play_everywhere);
 	FMOD::Sound*    Fmod_GetCachedSound(const char* sound_path);
-	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const FMOD_VECTOR* pos, const float min_distance, const float max_distance);
+	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const Vector& pos, const float min_distance, const float max_distance);
 	FMOD::Channel*  Fmod_CreateChannel(FMOD::Sound *sound, const char* name, const Fmod_Group &group, const bool loop, const float volume);
 
-	// These take HL Vectors as they're intended to be called from elsewhere in HL codebase
 	FMOD::Channel* Fmod_EmitSound(const char* sound_path, float volume);
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, float volume);
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, const Vector& pos);
@@ -70,4 +71,5 @@ namespace HLFMOD
 	void _Fmod_Report(const std::string &report_type, const std::string &info);
 	bool _Fmod_Result_OK(FMOD_RESULT *result);
 	FMOD_VECTOR _Fmod_HLVecToFmodVec(const Vector &vec);
-}
+	FMOD_VECTOR _Fmod_HLVecToFmodVec_NOSCALE(const Vector& vec);
+	}

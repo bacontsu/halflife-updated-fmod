@@ -23,8 +23,12 @@ namespace HLFMOD
 
 	FMOD::Channel* fmod_current_track;
 
-	const float DEFAULT_MIN_ATTEN = 40.0f;
-	const float DEFAULT_MAX_ATTEN = 40000.0f;
+	// Fmod uses meters. According to Valve, one Source unit = 3/4 inch = 1.905cm = 0.01905m. Assuming GoldSrc is identical.
+	const float METERS_TO_HLUNITS = (float) (1.0/0.01905); // roughly 52.5
+	const float HLUNITS_TO_METERS = 0.01905f;
+
+	const float DEFAULT_MIN_ATTEN = 1.0f * METERS_TO_HLUNITS;
+	const float DEFAULT_MAX_ATTEN = 10000.0f * METERS_TO_HLUNITS;
 
 	FMOD_REVERB_PROPERTIES fmod_reverb_presets[] = {
 		FMOD_PRESET_OFF,				//  0
@@ -80,7 +84,9 @@ namespace HLFMOD
 		_Fmod_Update_Volume();
 
 		// TODO: Allow customizing doppler and rolloff scale in a cfg
-		fmod_system->set3DSettings(1.0f, 40, 1.0f);
+		// distancefactor is set to default since we manually convert HL units into Fmod units (meters) for everything including velocity now.
+		// distancefactor ONLY affects doppler, not things like attenuation, hence doing manual conversion now.
+		// fmod_system->set3DSettings(1.0f, 1.0f, 1.0f);
 
 		_Fmod_LoadTracks();
 
@@ -110,14 +116,8 @@ namespace HLFMOD
 		Vector playerForward, playerRight, playerUp;
 		gEngfuncs.pfnAngleVectors(gHUD.playerAngles, playerForward, playerRight, playerUp);
 
-		// Converting these Vectors into FMOD vectors
-		FMOD_VECTOR FMODPlayerPosition	= _Fmod_HLVecToFmodVec(gHUD.playerOrigin);
-		FMOD_VECTOR FMODPlayerVelocity	= _Fmod_HLVecToFmodVec(gHUD.playerSpeed);
-		FMOD_VECTOR FMODPlayerForward	= _Fmod_HLVecToFmodVec(playerForward);
-		FMOD_VECTOR FMODPlayerUp		= _Fmod_HLVecToFmodVec(playerUp);
-
 		// update position
-		Fmod_Update_Listener_Position(&FMODPlayerPosition, &FMODPlayerVelocity, &FMODPlayerForward, &FMODPlayerUp);
+		Fmod_Update_Listener_Position(gHUD.playerOrigin, gHUD.playerSpeed, playerForward, playerUp);
 	}
 
 	void Fmod_Think(struct ref_params_s* pparams)
@@ -167,11 +167,17 @@ namespace HLFMOD
 		tracks_txt_file.close();
 	}
 
-	void Fmod_Update_Listener_Position(FMOD_VECTOR *pos, FMOD_VECTOR *vel, FMOD_VECTOR *forward, FMOD_VECTOR *up)
+	void Fmod_Update_Listener_Position(const Vector& pos, const Vector& vel, const Vector& forward, const Vector& up)
 	{
 		FMOD_RESULT result;
 
-		result = fmod_system->set3DListenerAttributes(0, pos, vel, forward, up);
+		// Conver Vectors into FMOD vectors
+		FMOD_VECTOR FMODPlayerPosition = _Fmod_HLVecToFmodVec(pos);
+		FMOD_VECTOR FMODPlayerVelocity = _Fmod_HLVecToFmodVec(vel);
+		FMOD_VECTOR FMODPlayerForward = _Fmod_HLVecToFmodVec_NOSCALE(forward);
+		FMOD_VECTOR FMODPlayerUp = _Fmod_HLVecToFmodVec_NOSCALE(up);
+
+		result = fmod_system->set3DListenerAttributes(0, &FMODPlayerPosition, &FMODPlayerVelocity, &FMODPlayerForward, &FMODPlayerUp);
 		_Fmod_Result_OK(&result);
 	}
 
@@ -248,7 +254,7 @@ namespace HLFMOD
 		return sound;
 	}
 
-	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const FMOD_VECTOR* pos, const float min_distance, const float max_distance)
+	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const Vector& pos, const float min_distance, const float max_distance)
 	{
 		FMOD_RESULT result;
 		FMOD::Reverb3D* reverb_sphere = NULL;
@@ -258,8 +264,10 @@ namespace HLFMOD
 
 		FMOD_REVERB_PROPERTIES properties = fmod_reverb_presets[preset];
 
+		FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
+
 		reverb_sphere->setProperties(&properties);
-		reverb_sphere->set3DAttributes(pos, min_distance, max_distance);
+		reverb_sphere->set3DAttributes(&fmod_pos, min_distance * HLUNITS_TO_METERS, max_distance * HLUNITS_TO_METERS);
 
 		Fmod_Reverb_Sphere rev_tuple(reverb_sphere, preset);
 		fmod_reverb_spheres.push_back(rev_tuple);
@@ -348,7 +356,7 @@ namespace HLFMOD
 		if (!channel) return nullptr; // TODO: Report warning about failure to play here
 
 		channel->set3DAttributes(&fmod_pos, &vel);
-		channel->set3DMinMaxDistance(min_atten, max_atten);
+		channel->set3DMinMaxDistance(min_atten * HLUNITS_TO_METERS, max_atten * HLUNITS_TO_METERS);
 		channel->setPitch(pitch);
 		channel->setPaused(false);
 
@@ -404,8 +412,19 @@ namespace HLFMOD
 		ConsolePrint(msg.c_str());
 	}
 
-	// Convert HL's coordinate system to Fmod
+	// Convert HL's coordinate system to Fmod (WITH UNIT SCALING)
 	FMOD_VECTOR _Fmod_HLVecToFmodVec(const Vector &vec)
+	{
+		FMOD_VECTOR FMODVector;
+		FMODVector.z = vec.x * HLUNITS_TO_METERS;
+		FMODVector.x = -vec.y * HLUNITS_TO_METERS;
+		FMODVector.y = vec.z * HLUNITS_TO_METERS;
+
+		return FMODVector;
+	}
+
+	// Convert HL's coordinate system to Fmod (NO UNIT SCALING - shortcut for direction vectors)
+	FMOD_VECTOR _Fmod_HLVecToFmodVec_NOSCALE(const Vector& vec)
 	{
 		FMOD_VECTOR FMODVector;
 		FMODVector.z = vec.x;
@@ -414,4 +433,4 @@ namespace HLFMOD
 
 		return FMODVector;
 	}
-}
+	}
