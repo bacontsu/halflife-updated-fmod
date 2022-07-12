@@ -22,14 +22,9 @@ sliders in the audio settings menu.
 
 namespace HLFMOD
 {
-	// This typedef is just to avoid seeing the FMOD namespace outside of fmod_manager.cpp/h
-	typedef FMOD::ChannelGroup* Fmod_Group;
-
 	extern FMOD::System *fmod_system;
-	extern Fmod_Group fmod_mp3_group;
-	extern Fmod_Group fmod_sfx_group;
-
-	//extern Fmod_Sound fmod_main_menu_music;
+	extern FMOD::ChannelGroup* fmod_mp3_group;
+	extern FMOD::ChannelGroup* fmod_sfx_group;
 
 	extern std::unordered_map<std::string, FMOD::Sound*>   fmod_cached_sounds;
 	extern std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
@@ -59,7 +54,7 @@ namespace HLFMOD
 	FMOD::Sound*    Fmod_CacheSound(const char* path, const bool is_track, bool play_everywhere);
 	FMOD::Sound*    Fmod_GetCachedSound(const char* sound_path);
 	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const Vector& pos, const float min_distance, const float max_distance);
-	FMOD::Channel*  Fmod_CreateChannel(FMOD::Sound *sound, const char* name, const Fmod_Group &group, const bool loop, const float volume);
+	FMOD::Channel*	Fmod_CreateChannel(FMOD::Sound* sound, const char* name, FMOD::ChannelGroup* group, const bool loop, const float volume);
 
 	FMOD::Channel* Fmod_EmitSound(const char* sound_path, float volume);
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, float volume);
@@ -72,4 +67,4 @@ namespace HLFMOD
 	bool _Fmod_Result_OK(FMOD_RESULT *result);
 	FMOD_VECTOR _Fmod_HLVecToFmodVec(const Vector &vec);
 	FMOD_VECTOR _Fmod_HLVecToFmodVec_NOSCALE(const Vector& vec);
-	}
+}

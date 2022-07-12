@@ -12,8 +12,8 @@
 namespace HLFMOD
 {
 	FMOD::System *fmod_system;
-	Fmod_Group fmod_mp3_group;
-	Fmod_Group fmod_sfx_group;
+	FMOD::ChannelGroup* fmod_mp3_group;
+	FMOD::ChannelGroup* fmod_sfx_group;
 
 	std::unordered_map<std::string, FMOD::Sound*> fmod_cached_sounds;
 	std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
@@ -275,7 +275,7 @@ namespace HLFMOD
 		return reverb_sphere;
 	}
 
-	FMOD::Channel* Fmod_CreateChannel(FMOD::Sound* sound, const char* name, const Fmod_Group &group, const bool loop, const float volume)
+	FMOD::Channel* Fmod_CreateChannel(FMOD::Sound* sound, const char* name, FMOD::ChannelGroup* group, const bool loop, const float volume)
 	{
 		FMOD_RESULT result;
 		FMOD::Channel* channel = NULL;
