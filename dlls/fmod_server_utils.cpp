@@ -38,4 +38,18 @@ namespace HLFMOD
 		WRITE_FLOAT(pitch);		
 		MESSAGE_END();
 	}
+
+	void UTIL_TogglePauseChannel(const char* channel_name)
+	{
+		MESSAGE_BEGIN(MSG_ALL, gmsgFmodPause, NULL);
+		WRITE_STRING(channel_name);
+		MESSAGE_END();
+	}
+
+	void UTIL_StopChannel(const char* channel_name)
+	{
+		MESSAGE_BEGIN(MSG_ALL, gmsgFmodStop, NULL);
+		WRITE_STRING(channel_name);
+		MESSAGE_END();
+	}
 }
