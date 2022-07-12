@@ -493,10 +493,13 @@ bool CHudFmodPlayer::MsgFunc_FmodEmit(const char* pszName, int iSize, void* pbuf
 	float max_atten = READ_FLOAT();
 	float pitch = READ_FLOAT();
 
-	FMOD::Sound* sound = Fmod_GetCachedSound(msg.c_str());
+	std::string channel_name = msg.substr(0, msg.find('\n'));
+	std::string sound_path = msg.substr(msg.find('\n') + 1, std::string::npos);
+
+	FMOD::Sound* sound = Fmod_GetCachedSound(sound_path.c_str());
 	if (!sound) return false; // Error reported in Fmod_GetCachedSound call stack
 
-	Fmod_EmitSound(sound, "EMITFROMSERVER", volume, looping, pos, min_atten, max_atten, pitch);
+	Fmod_EmitSound(sound, channel_name.c_str(), volume, looping, pos, min_atten, max_atten, pitch);
 
 	return true;
 }
