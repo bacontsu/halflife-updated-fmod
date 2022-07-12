@@ -308,6 +308,13 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 
 bool CHudFmodPlayer::MsgFunc_FmodCache(const char* pszName, int iSize, void* pbuf)
 {
+	// Always pause level track on new level load for multiplayer (TODO: maybe allow this to be configured?)
+	bool multiplayer = gEngfuncs.GetMaxClients() != 1;
+	if (multiplayer && fmod_current_track)
+	{
+		fmod_current_track->setPaused(true);
+	}
+
 	std::string gamedir = gEngfuncs.pfnGetGameDirectory();
 	std::string level_name = gEngfuncs.pfnGetLevelName();
 	std::string soundcache_path = gamedir + "/" + level_name + "_soundcache.txt";
