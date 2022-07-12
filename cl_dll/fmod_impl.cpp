@@ -15,8 +15,6 @@ namespace HLFMOD
 	Fmod_Group fmod_mp3_group;
 	Fmod_Group fmod_sfx_group;
 
-	//Fmod_Sound fmod_main_menu_music;
-
 	std::unordered_map<std::string, FMOD::Sound*> fmod_cached_sounds;
 	std::unordered_map<std::string, FMOD::Channel*> fmod_channels;
 	std::unordered_map<std::string, FMOD::Sound*> fmod_tracks;
@@ -85,6 +83,15 @@ namespace HLFMOD
 		fmod_system->set3DSettings(1.0f, 40, 1.0f);
 
 		_Fmod_LoadTracks();
+
+		// TODO: probably worth putting this in a "set track" function in the API
+		// Play main menu music
+		result = fmod_system->playSound(fmod_tracks.begin()->second, fmod_mp3_group, true, &fmod_current_track);
+		if (!_Fmod_Result_OK(&result)) return false;
+
+		fmod_current_track->setVolume(1.0f);
+		fmod_current_track->setMode(FMOD_LOOP_NORMAL);
+		fmod_current_track->setPaused(false);
 
 		return true;
 	}
@@ -347,44 +354,6 @@ namespace HLFMOD
 
 		return channel;
 	}
-
-	/* void Fmod_PlayMainMenuMusic(void)
-	{
-		std::string gamedir = gEngfuncs.pfnGetGameDirectory();
-		std::string cfg_path = gamedir + FMOD_PATH_SEP + "menu_music.cfg";
-
-		std::ifstream cfg_file;
-		cfg_file.open(cfg_path);
-
-		if (cfg_file.fail())
-		{
-			std::string error_msg = "FMOD ERROR: Could not open menu_music.cfg\n";
-			fprintf(stderr, error_msg.c_str());
-			ConsolePrint(error_msg.c_str());
-			return;
-		}
-
-		std::string music_file_path = "";
-		cfg_file >> music_file_path;
-
-		if (music_file_path.compare("") != 0)
-		{
-			// Get volume from cfg file
-			std::string volume_str = "";
-			float volume = 1.0f;
-			cfg_file >> volume_str;
-
-			if (volume_str.compare("") != 0)
-				volume = std::stof(volume_str);
-			else
-				volume = 1.0f;
-        
-			fmod_main_menu_music = Fmod_LoadSound(music_file_path.c_str());
-			Fmod_PlaySound(fmod_main_menu_music, fmod_mp3_group, true, volume);
-		}
-
-		cfg_file.close();
-	}*/
 
 	void Fmod_Shutdown(void)
 	{
