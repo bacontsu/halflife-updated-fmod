@@ -123,6 +123,7 @@ public:
 };
 
 LINK_ENTITY_TO_CLASS(fmod_pause, CFmodPause);
+LINK_ENTITY_TO_CLASS(fmod_toggle_pause, CFmodPause);
 
 void CFmodPause::Spawn()
 {
