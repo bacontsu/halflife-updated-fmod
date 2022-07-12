@@ -28,10 +28,10 @@ namespace HLFMOD
 		WRITE_COORD(pos.x);
 		WRITE_COORD(pos.y);
 		WRITE_COORD(pos.z);
-		WRITE_COORD(volume);	
-		WRITE_COORD(min_atten); 
-		WRITE_LONG((long)max_atten); // for some reason this refuses to work as a float. +/- 1 inch shouldn't matter for max_atten though.
-		WRITE_COORD(pitch);		
+		WRITE_FLOAT(volume);	
+		WRITE_FLOAT(min_atten); 
+		WRITE_FLOAT(max_atten);
+		WRITE_FLOAT(pitch);		
 		MESSAGE_END();
 	}
 }

@@ -397,11 +397,11 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	vel.y = 0;
 	vel.z = 0;
 
-	float volume = READ_COORD();
+	float volume = READ_FLOAT();
 
-	float min_atten = READ_COORD();
-	float max_atten = READ_LONG();
-	float pitch = READ_COORD();
+	float min_atten = READ_FLOAT();
+	float max_atten = READ_FLOAT();
+	float pitch = READ_FLOAT();
 
 	// TODO: sanitize inputs
 
@@ -477,11 +477,11 @@ bool CHudFmodPlayer::MsgFunc_FmodEmit(const char* pszName, int iSize, void* pbuf
 	pos.y = READ_COORD();
 	pos.z = READ_COORD();
 
-	float volume = READ_COORD();
+	float volume = READ_FLOAT();
 
-	float min_atten = READ_COORD();
-	float max_atten = READ_LONG();
-	float pitch = READ_COORD();
+	float min_atten = READ_FLOAT();
+	float max_atten = READ_FLOAT();
+	float pitch = READ_FLOAT();
 
 	FMOD::Sound* sound = Fmod_GetCachedSound(msg.c_str());
 
@@ -497,8 +497,8 @@ bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 	bool looping = READ_BYTE();
 	// TODO: Clean this up and put all the reads together for more visual clarity in the code
 
-	float volume = READ_COORD();
-	float pitch = READ_COORD();
+	float volume = READ_FLOAT();
+	float pitch = READ_FLOAT();
 
 	// TODO: sanitize inputs
 ;
@@ -548,8 +548,8 @@ bool CHudFmodPlayer::MsgFunc_FmodRev(const char* pszName, int iSize, void* pbuf)
 	pos.y = READ_COORD();
 	pos.z = READ_COORD();
 
-	float min_dist = READ_COORD();
-	long max_dist = READ_LONG();
+	float min_dist = READ_FLOAT();
+	long max_dist = READ_FLOAT();
 
 	int preset = READ_BYTE();
 

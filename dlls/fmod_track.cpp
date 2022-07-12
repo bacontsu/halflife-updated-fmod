@@ -61,8 +61,8 @@ void CFmodTrack::SendMsg(void)
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodTrk, NULL);
 	WRITE_STRING(STRING(pev->message));
 	WRITE_BYTE(m_fLooping);
-	WRITE_COORD(volume); // Default: 1.0
-	WRITE_COORD(pitch);	 // Default: 1.0 (2.0 = one octave up, 0.5 = one octave down)
+	WRITE_FLOAT(volume); // Default: 1.0
+	WRITE_FLOAT(pitch);	 // Default: 1.0 (2.0 = one octave up, 0.5 = one octave down)
 	MESSAGE_END();
 
 	// TODO: sanitize inputs

@@ -52,8 +52,8 @@ void CFmodReverb::SendMsg(void)
 	WRITE_COORD(pev->origin.x);
 	WRITE_COORD(pev->origin.y);
 	WRITE_COORD(pev->origin.z);
-	WRITE_COORD(min_dist);
-	WRITE_LONG((long) max_dist); // Refuses to work as float. +/- 1 inch shouldn't make a difference.
+	WRITE_FLOAT(min_dist);
+	WRITE_FLOAT(max_dist);
 	WRITE_BYTE(preset);
 	MESSAGE_END();
 

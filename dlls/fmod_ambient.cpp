@@ -70,10 +70,10 @@ void CFmodAmbient::SendMsg(void)
 	WRITE_COORD(pev->origin.x);
 	WRITE_COORD(pev->origin.y);
 	WRITE_COORD(pev->origin.z);
-	WRITE_COORD(volume); // Default: 1.0
-	WRITE_COORD(min_atten); // Default: 40.0
-	WRITE_LONG((long) max_atten); // Default: 40000.0 // Refuses to work as float. +/- 1 inch shouldn't make a difference.
-	WRITE_COORD(pitch); // Default: 1.0 (2.0 = one octave up, 0.5 = one octave down)
+	WRITE_FLOAT(volume);	// Default: 1.0
+	WRITE_FLOAT(min_atten); // Default: 40.0
+	WRITE_FLOAT(max_atten); // Default: 40000.0
+	WRITE_FLOAT(pitch);		// Default: 1.0 (2.0 = one octave up, 0.5 = one octave down)
 	MESSAGE_END();
 
 	// TODO: sanitize inputs
