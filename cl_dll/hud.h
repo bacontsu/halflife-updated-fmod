@@ -384,6 +384,7 @@ public:
 	bool MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodRev(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodPause(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_FmodStop(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodSeek(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodSave(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf);

@@ -13,8 +13,8 @@ public:
 	bool KeyValue(KeyValueData* pkvd) override;
 	void EXPORT SendMsg(void);
 
-	bool m_fLooping;
-	bool m_fPlayOnStart;
+	bool m_bLooping;
+	bool m_bPlayOnStart;
 
 private:
 	float volume;
@@ -38,15 +38,15 @@ void CFmodAmbient::Spawn()
 	}
 
 	if (FBitSet(pev->spawnflags, FMOD_AMBIENT_LOOPING)) 
-		m_fLooping = true;
+		m_bLooping = true;
 
 	if (FBitSet(pev->spawnflags, FMOD_AMBIENT_PLAYONSTART))
-		m_fPlayOnStart = true;
+		m_bPlayOnStart = true;
 
 	pev->solid = SOLID_NOT;
 	pev->movetype = MOVETYPE_NONE;
 
-	if (m_fPlayOnStart)
+	if (m_bPlayOnStart)
 	{
 		SetThink(&CFmodAmbient::SendMsg);
 		pev->nextthink = gpGlobals->time + 0.2f; // TODO: Make sure this is a long enough delay or the message might get dropped
@@ -66,7 +66,7 @@ void CFmodAmbient::SendMsg(void)
 	// TODO: Figure out if we can truly only write one string in a message or if I'm doing something wrong
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodAmb, NULL);
 	WRITE_STRING(msg.c_str());
-	WRITE_BYTE(m_fLooping);
+	WRITE_BYTE(m_bLooping);
 	WRITE_COORD(pev->origin.x);
 	WRITE_COORD(pev->origin.y);
 	WRITE_COORD(pev->origin.z);
@@ -137,6 +137,53 @@ void CFmodPause::Spawn()
 void CFmodPause::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
 {
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodPause, NULL);
+	WRITE_STRING(STRING(pev->target));
+	MESSAGE_END();
+}
+
+// -----------------------------------------------------------------------------------------------
+
+class CFmodStop : public CBaseEntity
+{
+public:
+	void Spawn() override;
+	void Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value) override;
+	void EXPORT SendMsg(void);
+
+	bool m_bTrigOnStart;
+};
+
+LINK_ENTITY_TO_CLASS(fmod_stop, CFmodStop);
+
+#define FMOD_STOP_TRIGONSTART 2
+
+void CFmodStop::Spawn()
+{
+	if (FStringNull(pev->target))
+	{
+		ALERT(at_error, "EMPTY FMOD_STOP AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z);
+		REMOVE_ENTITY(ENT(pev));
+		return;
+	}
+
+	if (FBitSet(pev->spawnflags, FMOD_AMBIENT_PLAYONSTART))
+		m_bTrigOnStart = true;
+
+	if (m_bTrigOnStart)
+	{
+		SetThink(&CFmodStop::SendMsg);
+		pev->nextthink = gpGlobals->time + 0.2f; // TODO: Make sure this is a long enough delay or the message might get dropped
+	}
+}
+
+void CFmodStop::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
+{
+	SendMsg();
+}
+
+void CFmodStop::SendMsg(void)
+{
+	MESSAGE_BEGIN(MSG_ALL, gmsgFmodStop, NULL);
 	WRITE_STRING(STRING(pev->target));
 	MESSAGE_END();
 }

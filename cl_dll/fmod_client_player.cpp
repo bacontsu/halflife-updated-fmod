@@ -19,6 +19,7 @@ DECLARE_MESSAGE(m_Fmod, FmodEmit)
 DECLARE_MESSAGE(m_Fmod, FmodTrk)
 DECLARE_MESSAGE(m_Fmod, FmodRev)
 DECLARE_MESSAGE(m_Fmod, FmodPause)
+DECLARE_MESSAGE(m_Fmod, FmodStop)
 DECLARE_MESSAGE(m_Fmod, FmodSeek)
 DECLARE_MESSAGE(m_Fmod, FmodSave)
 DECLARE_MESSAGE(m_Fmod, FmodLoad)
@@ -31,6 +32,7 @@ bool CHudFmodPlayer::Init()
 	HOOK_MESSAGE(FmodTrk);
 	HOOK_MESSAGE(FmodRev);
 	HOOK_MESSAGE(FmodPause);
+	HOOK_MESSAGE(FmodStop);
 	HOOK_MESSAGE(FmodSeek);
 	HOOK_MESSAGE(FmodSave);
 	HOOK_MESSAGE(FmodLoad);
@@ -575,6 +577,36 @@ bool CHudFmodPlayer::MsgFunc_FmodPause(const char* pszName, int iSize, void* pbu
 		bool paused = false;
 		channel->getPaused(&paused);
 		channel->setPaused(!paused);
+	}
+	return true;
+}
+
+bool CHudFmodPlayer::MsgFunc_FmodStop(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	std::string channel_name = std::string(READ_STRING());
+
+	FMOD::Channel* channel = NULL;
+
+	if (channel_name == "fmod_current_track")
+	{
+		channel = fmod_current_track;
+	}
+
+	else
+	{
+		auto it = fmod_channels.find(channel_name);
+		if (it == fmod_channels.end())
+		{
+			_Fmod_Report("WARNING", "Tried to stop unknown channel " + channel_name);
+			return false;
+		}
+		channel = it->second;
+	}
+
+	if (channel)
+	{
+		channel->setPaused(true);
 	}
 	return true;
 }
