@@ -61,6 +61,9 @@ namespace HLFMOD
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, const Vector& pos);
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, const char* channel_name, float volume, bool looping, const Vector& pos, float min_atten, float max_atten, float pitch);
 
+	// TODO: Maybe a Fmod_CacheTrack function?
+	FMOD::Sound* Fmod_GetCachedTrack(const char* track_path);
+
 	void _Fmod_LoadTracks(void);
 	void _Fmod_Update_Volume(void);
 	void _Fmod_Report(const std::string &report_type, const std::string &info);

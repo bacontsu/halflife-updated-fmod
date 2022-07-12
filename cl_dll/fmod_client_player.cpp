@@ -329,7 +329,6 @@ bool CHudFmodPlayer::MsgFunc_FmodCache(const char* pszName, int iSize, void* pbu
 	else _Fmod_Report("INFO", "Precaching sounds from file: " + soundcache_path);
 
 	std::string filename;
-	// TODO: allow writing if it's a 2D or 3D sound to file
 	while (std::getline(soundcache_file, filename)) sound_paths.push_back(filename);
 
 	if (!soundcache_file.eof())
@@ -389,18 +388,11 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	BEGIN_READ(pbuf, iSize);
 	std::string msg = std::string(READ_STRING());
 	bool looping = READ_BYTE();
-	// TODO: Clean this up and put all the reads together for more visual clarity in the code
+
 	Vector pos;
 	pos.x = READ_COORD();
 	pos.y = READ_COORD();
 	pos.z = READ_COORD();
-
-	FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
-
-	FMOD_VECTOR vel;
-	vel.x = 0;
-	vel.y = 0;
-	vel.z = 0;
 
 	float volume = READ_FLOAT();
 
@@ -409,27 +401,22 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	float max_atten_meters = READ_FLOAT() * HLUNITS_TO_METERS;
 	float pitch = READ_FLOAT();
 
+	FMOD_VECTOR fmod_pos = _Fmod_HLVecToFmodVec(pos);
+
+	FMOD_VECTOR vel;
+	vel.x = 0;
+	vel.y = 0;
+	vel.z = 0;
+
 	// TODO: sanitize inputs
 
 	std::string channel_name = msg.substr(0, msg.find('\n'));
 	std::string sound_path = msg.substr(msg.find('\n') + 1, std::string::npos);
 
-	FMOD::Sound* sound = NULL;
+	FMOD::Sound* sound = Fmod_GetCachedSound(sound_path.c_str());
+	if (!sound) return false; // Error reported in Fmod_GetCachedSound call stack
+
 	FMOD::Channel* channel = NULL;
-
-	// TODO: Separate finding the sound into its own function
-	auto sound_iter = fmod_cached_sounds.find(sound_path);
-
-	if (sound_iter == fmod_cached_sounds.end())
-	{
-		_Fmod_Report("WARNING", "Entity " + channel_name + " playing uncached sound " + sound_path +
-									". Add the sound to your [MAPNAME].bsp_soundcache.txt file.");
-		_Fmod_Report("INFO", "Attempting to cache and play sound " + sound_path);
-		sound = Fmod_CacheSound(sound_path.c_str(), false);
-		if (!sound) return false; // Error will be reported by Fmod_CacheSound
-	}
-	else
-		sound = sound_iter->second;
 
 	// Non-looping sounds need a new channel every time they play
 	// TODO: Consider destroying the old channel with the same name.
@@ -438,7 +425,11 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	if (!looping)
 	{
 		channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, false, volume);
-		if (!channel) return false; // TODO: Report warning about failure to play here
+		if (!channel)
+		{
+			_Fmod_Report("WARNING", "Failed to create channel " + channel_name);
+			return false;
+		}
 
 		channel->set3DAttributes(&fmod_pos, &vel);
 		channel->set3DMinMaxDistance(min_atten_meters, max_atten_meters);
@@ -455,7 +446,11 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		{
 			// TODO: send looping and volume info from entity
 			channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, true, volume);
-			if (!channel) return false; // TODO: Report warning about failure to play here
+			if (!channel)
+			{
+				_Fmod_Report("WARNING", "Failed to create channel " + channel_name);
+				return false;
+			}
 		}
 		else channel = channel_iter->second;
 
@@ -490,6 +485,7 @@ bool CHudFmodPlayer::MsgFunc_FmodEmit(const char* pszName, int iSize, void* pbuf
 	float pitch = READ_FLOAT();
 
 	FMOD::Sound* sound = Fmod_GetCachedSound(msg.c_str());
+	if (!sound) return false; // Error reported in Fmod_GetCachedSound call stack
 
 	Fmod_EmitSound(sound, "EMITFROMSERVER", volume, looping, pos, min_atten, max_atten, pitch);
 
@@ -501,26 +497,13 @@ bool CHudFmodPlayer::MsgFunc_FmodTrk(const char* pszName, int iSize, void* pbuf)
 	BEGIN_READ(pbuf, iSize);
 	std::string sound_path = std::string(READ_STRING());
 	bool looping = READ_BYTE();
-	// TODO: Clean this up and put all the reads together for more visual clarity in the code
-
 	float volume = READ_FLOAT();
 	float pitch = READ_FLOAT();
 
 	// TODO: sanitize inputs
-;
-	FMOD::Sound* sound = NULL;
 
-	// TODO: Separate finding the sound into its own function
-	auto sound_iter = fmod_tracks.find(sound_path);
-
-	if (sound_iter == fmod_tracks.end())
-	{
-		_Fmod_Report("WARNING", "Attempting to play track " + sound_path + " without caching it. Add it to your tracks.txt!");
-		_Fmod_Report("INFO", "Attempting to cache and play track " + sound_path);
-		sound = Fmod_CacheSound(sound_path.c_str(), true);
-		if (!sound) return false; // Error will be reported by Fmod_CacheSound
-	}
-	else sound = sound_iter->second;
+	FMOD::Sound* sound = Fmod_GetCachedTrack(sound_path.c_str());
+	if (!sound) return false; // error reported in Fmod_GetCachedSound call stack
 
 	// Create a fresh channel every time a track plays
 	if (fmod_current_track) fmod_current_track->stop();

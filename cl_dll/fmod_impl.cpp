@@ -305,7 +305,7 @@ namespace HLFMOD
 
 	FMOD::Sound* Fmod_GetCachedSound(const char* sound_path)
 	{
-		FMOD::Sound* sound = nullptr;
+		FMOD::Sound* sound = NULL;
 
 		auto sound_iter = fmod_cached_sounds.find(sound_path);
 
@@ -320,6 +320,25 @@ namespace HLFMOD
 			sound = sound_iter->second;
 
 		return sound;
+	}
+
+	FMOD::Sound* Fmod_GetCachedTrack(const char* track_path)
+	{
+		FMOD::Sound* track = NULL;
+
+		auto track_iter = fmod_tracks.find(track_path);
+
+		if (track_iter == fmod_tracks.end())
+		{
+			_Fmod_Report("WARNING", "Trying to play uncached track " + std::string(track_path) +
+										". Add the sound to your tracks.txt file.");
+			_Fmod_Report("INFO", "Attempting to cache and play track " + std::string(track_path));
+			track = Fmod_CacheSound(track_path, true);
+		}
+		else
+			track = track_iter->second;
+
+		return track;
 	}
 
 	FMOD::Channel* Fmod_EmitSound(const char* sound_path, float volume)
@@ -353,7 +372,11 @@ namespace HLFMOD
 
 		// Always create a new channel for EmitSound
 		channel = Fmod_CreateChannel(sound, channel_name, fmod_sfx_group, looping, volume);
-		if (!channel) return nullptr; // TODO: Report warning about failure to play here
+		if (!channel)
+		{
+			_Fmod_Report("WARNING", "Failed to create channel " + std::string(channel_name));
+			return NULL;
+		}
 
 		channel->set3DAttributes(&fmod_pos, &vel);
 		channel->set3DMinMaxDistance(min_atten * HLUNITS_TO_METERS, max_atten * HLUNITS_TO_METERS);
@@ -374,14 +397,13 @@ namespace HLFMOD
 	void _Fmod_Update_Volume(void)
 	{
 		// Check if user has changed volumes and update accordingly
-		// TODO: See if this can be done in an event-based way instead
-		float new_mp3_vol = CVAR_GET_FLOAT("MP3Volume"); // TODO: Get volume slider value somehow
+		float new_mp3_vol = CVAR_GET_FLOAT("MP3Volume");
 		float old_mp3_vol = 1.0f;
 		fmod_mp3_group->getVolume(&old_mp3_vol);
 		if (new_mp3_vol != old_mp3_vol)
 			fmod_mp3_group->setVolume(new_mp3_vol);
 
-		float new_sfx_vol = CVAR_GET_FLOAT("volume"); // TODO: Get volume slider value somehow
+		float new_sfx_vol = CVAR_GET_FLOAT("volume");
 		float old_sfx_vol = 1.0f;
 		fmod_sfx_group->getVolume(&old_sfx_vol);
 		if (new_sfx_vol != old_sfx_vol)
