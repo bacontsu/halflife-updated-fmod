@@ -55,6 +55,8 @@ namespace HLFMOD
 	FMOD::Sound*    Fmod_GetCachedSound(const char* sound_path);
 	FMOD::Reverb3D* Fmod_CreateReverbSphere(int preset, const Vector& pos, const float min_distance, const float max_distance);
 	FMOD::Channel*	Fmod_CreateChannel(FMOD::Sound* sound, const char* name, FMOD::ChannelGroup* group, const bool loop, const float volume);
+	FMOD::Channel*	Fmod_GetChannel(const char* channel_name);
+	FMOD::Channel*	Fmod_GetChannel(const char* channel_name, bool warn_if_not_found);
 
 	FMOD::Channel* Fmod_EmitSound(const char* sound_path, float volume);
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, float volume);
@@ -64,6 +66,7 @@ namespace HLFMOD
 	// TODO: Maybe a Fmod_CacheTrack function?
 	FMOD::Sound* Fmod_GetCachedTrack(const char* track_path);
 
+	void _Fmod_LoadSounds(void);
 	void _Fmod_LoadTracks(void);
 	void _Fmod_Update_Volume(void);
 	void _Fmod_Report(const std::string &report_type, const std::string &info);

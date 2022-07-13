@@ -6,8 +6,10 @@
 #include "fmod_api.h"
 #include "FMOD/fmod_errors.h"
 
+#include <map>
 #include <fstream>
 #include <iostream>
+#include <set>
 
 namespace HLFMOD
 {
@@ -56,6 +58,8 @@ namespace HLFMOD
 		FMOD_PRESET_SEWERPIPE,			// 22
 		FMOD_PRESET_UNDERWATER			// 23
 	};
+
+	std::string last_level_name = "";
 
 	bool Fmod_Init(void)
 	{
@@ -132,6 +136,109 @@ namespace HLFMOD
 			fmod_sfx_group->setPaused(false);
 			fmod_mp3_group->setPaused(false);
 		}
+
+		std::string level_name = gEngfuncs.pfnGetLevelName();
+
+		// Level has changed
+		if (level_name != last_level_name)
+		{
+			// Always pause level track on new level load for multiplayer (TODO: maybe allow this to be configured?)
+			bool multiplayer = gEngfuncs.GetMaxClients() != 1;
+			if (multiplayer && fmod_current_track)
+			{
+				fmod_current_track->setPaused(true);
+			}
+
+			// Cache sounds
+			_Fmod_LoadSounds();
+
+			last_level_name = level_name;
+		}
+	}
+
+	void _Fmod_LoadSounds(void)
+	{
+		// We can't release channels here because this might get called *after* MsgFunc_FmodLoad which would kill any loaded channels
+		// playing. This means we only ever unload channels when
+		//Fmod_Release_Channels();
+		//Fmod_Release_Sounds(); // We now intelligently only release sounds that aren't used in the current map
+
+		// This is O(mn) currently. Possible O(n) solution might be to create a set of pairs (sound_path, want_loaded) that
+		// represent all sound files in play (cached sounds + want_to_cache sounds, unique entries only) then iterate through
+		// that.
+
+		std::string gamedir = gEngfuncs.pfnGetGameDirectory();
+		std::string level_name = gEngfuncs.pfnGetLevelName();
+
+		std::string files_to_load_from[] = {
+			gamedir + "/" + level_name + "_soundcache.txt",
+			gamedir + "/alwayscache.txt"};
+
+		// Get all sound path strings from cache files
+		std::set<std::string> want_to_cache; // Complexity for find is much better with a set than a vector
+
+		for (std::string cache_filepath : files_to_load_from)
+		{
+			std::ifstream soundcache_file;
+			soundcache_file.open(cache_filepath);
+
+			if (!soundcache_file.is_open())
+			{
+				_Fmod_Report("WARNING", "Could not open soundcache file " + cache_filepath + ". No sounds were precached!");
+				Fmod_Release_Sounds(); // Release all sounds
+				return;
+			}
+			else
+				_Fmod_Report("INFO", "Precaching sounds from file: " + cache_filepath);
+
+			std::string filename;
+			while (std::getline(soundcache_file, filename))
+				want_to_cache.insert(filename);
+
+			if (!soundcache_file.eof())
+				_Fmod_Report("WARNING", "Stopped reading soundcache file " + cache_filepath + " before the end of file due to unknown error.");
+
+			soundcache_file.close();
+		}
+
+		std::vector<std::string> remove_me;
+
+		// Iterate through cached sounds and handle sounds that should be unloaded, and wanted sounds that are already loaded
+		auto cached_sounds_it = fmod_cached_sounds.begin();
+		while (cached_sounds_it != fmod_cached_sounds.end())
+		{
+			auto want_to_cache_it = want_to_cache.find(cached_sounds_it->first);
+
+			// Sound is already loaded
+			if (want_to_cache_it != want_to_cache.end())
+			{
+				want_to_cache.erase(want_to_cache_it);
+			}
+
+			// Sound should be unloaded
+			else
+			{
+				remove_me.push_back(cached_sounds_it->first);
+			}
+
+			cached_sounds_it++;
+		}
+
+		// Unload unwanted sounds
+		for (size_t i = 0; i < remove_me.size(); i++)
+		{
+			auto sound_it = fmod_cached_sounds.find(remove_me[i]);
+			sound_it->second->release();
+			fmod_cached_sounds.erase(sound_it);
+		}
+
+		// Load remaining want_to_cache entries
+		auto want_to_cache_it = want_to_cache.begin();
+		while (want_to_cache_it != want_to_cache.end())
+		{
+			Fmod_CacheSound(want_to_cache_it->c_str(), false);
+			want_to_cache_it++;
+		}
 	}
 
 	void _Fmod_LoadTracks(void)
@@ -162,7 +269,7 @@ namespace HLFMOD
 		}
 
 		if (!tracks_txt_file.eof())
-			_Fmod_Report("WARNING", "Stopped reading soundcache file " + tracks_txt_path + " before the end of file due to error.");
+			_Fmod_Report("WARNING", "Stopped reading soundcache file " + tracks_txt_path + " before the end of file due to unknown error.");
 
 		tracks_txt_file.close();
 	}
@@ -347,6 +454,34 @@ namespace HLFMOD
 
 		Vector dummyVec;
 		return Fmod_EmitSound(sound, "NONAME", volume, false, dummyVec, DEFAULT_MIN_ATTEN, DEFAULT_MAX_ATTEN, 1.0f);
+	}
+
+	FMOD::Channel* Fmod_GetChannel(const char* channel_name)
+	{
+		return Fmod_GetChannel(channel_name, true);
+	}
+
+	FMOD::Channel* Fmod_GetChannel(const char* channel_name, bool warn_if_not_found)
+	{
+		FMOD::Channel* channel = NULL;
+
+		if (std::string(channel_name) == "fmod_current_track")
+		{
+			channel = fmod_current_track;
+		}
+
+		else
+		{
+			auto it = fmod_channels.find(channel_name);
+			if (it == fmod_channels.end())
+			{
+				if (warn_if_not_found) _Fmod_Report("WARNING", "Tried to find unknown channel " + std::string(channel_name));
+				return NULL;
+			}
+			channel = it->second;
+		}
+
+		return channel;
 	}
 
 	FMOD::Channel* Fmod_EmitSound(FMOD::Sound* sound, float volume)

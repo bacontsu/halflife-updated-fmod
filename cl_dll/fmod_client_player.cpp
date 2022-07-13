@@ -185,6 +185,18 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 	BEGIN_READ(pbuf, iSize);
 	std::string filename = std::string(READ_STRING());
 
+	Fmod_Release_Channels();
+
+	std::ifstream save_file;
+	save_file.open(filename);
+
+	if (!save_file.is_open())
+	{
+		// TODO: player will sometimes make bogus savefiles since apparently CBasePlayer::Restore is called every level transition
+		// For now, fail silently.
+		return false;
+	}
+
 	_Fmod_Report("INFO", "Loading the following file: " + filename);
 
 	bool mp3_paused = false;
@@ -195,10 +207,6 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 
 	fmod_mp3_group->setPaused(true);
 	fmod_sfx_group->setPaused(true);
-	//Fmod_Release_Channels();
-
-	std::ifstream save_file;
-	save_file.open(filename);
 
 	fmod_current_track->stop();
 
@@ -260,11 +268,8 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 
 		if (sound_it == fmod_cached_sounds.end())
 		{
-			// TODO: Precaching is breaking on load for some reason. Fix it.
-			/*_Fmod_Report("ERROR", "Could not find sound " + sound_name + " for ent " + ent_name + " from savefile!");
-			return false;*/
-
-			// HACK: For now, force sound to be cached here
+			// When loading a save from a different map, this message might be received before _Fmod_LoadSounds gets called
+			// This is fine -- just cache the sound here and _Fmod_LoadSounds will know not to load it redundantly
 			sound = Fmod_CacheSound(sound_name.c_str(), false);
 		}
 		else
@@ -306,89 +311,10 @@ bool CHudFmodPlayer::MsgFunc_FmodLoad(const char* pszName, int iSize, void* pbuf
 	return true;
 }
 
+// unused
 bool CHudFmodPlayer::MsgFunc_FmodCache(const char* pszName, int iSize, void* pbuf)
 {
-	// Always pause level track on new level load for multiplayer (TODO: maybe allow this to be configured?)
-	bool multiplayer = gEngfuncs.GetMaxClients() != 1;
-	if (multiplayer && fmod_current_track)
-	{
-		fmod_current_track->setPaused(true);
-	}
-
-	std::string gamedir = gEngfuncs.pfnGetGameDirectory();
-	std::string level_name = gEngfuncs.pfnGetLevelName();
-	std::string soundcache_path = gamedir + "/" + level_name + "_soundcache.txt";
-
-	Fmod_Release_Channels();
-	//Fmod_Release_Sounds(); // We now intelligently only release sounds that aren't used in the current map
-
-	// Get all sound path strings from file
-	std::vector<std::string> sound_paths;
-	std::ifstream soundcache_file;
-
-	sound_paths.reserve(100);
-	soundcache_file.open(soundcache_path);
-
-	if (!soundcache_file.is_open())
-	{
-		_Fmod_Report("WARNING", "Could not open soundcache file " + soundcache_path + ". No sounds were precached!");
-		Fmod_Release_Sounds(); // Release all sounds
-		return true;
-	}
-	else _Fmod_Report("INFO", "Precaching sounds from file: " + soundcache_path);
-
-	std::string filename;
-	while (std::getline(soundcache_file, filename)) sound_paths.push_back(filename);
-
-	if (!soundcache_file.eof())
-		_Fmod_Report("WARNING", "Stopped reading soundcache file " + soundcache_path + " before the end of file due to error.");
-
-	soundcache_file.close();
-
-	// Create a vector of all sounds files, cached or to be loaded, with no duplicates
-	std::vector<std::string> all_sounds(sound_paths);
-	auto sounds_it = fmod_cached_sounds.begin();
-	while (sounds_it != fmod_cached_sounds.end())
-	{
-		// Check if path is already in all_sounds
-		auto sound_path = std::find(all_sounds.begin(), all_sounds.end(), sounds_it->first);
-		if (sound_path != all_sounds.end())
-		{
-			// If it's not already in all_sounds, add it
-			all_sounds.push_back(sounds_it->first);
-		}
-
-		sounds_it++;
-	}
-
-	// For each sound path in all_sounds, check if it's already loaded and if we're trying to load it
-	for (size_t i = 0; i < all_sounds.size(); i++)
-	{
-		auto cached_sound = fmod_cached_sounds.find(all_sounds[i]);
-		auto load_sound = std::find(sound_paths.begin(), sound_paths.end(), all_sounds[i]);
-
-		// If the sound is already cached and we want to load it, remove it from sound_paths so we don't load it again
-		if (cached_sound != fmod_cached_sounds.end() && load_sound != sound_paths.end())
-			sound_paths.erase(load_sound);
-
-		// If the sound is cached but we don't want to load it, uncache it
-		else if (cached_sound != fmod_cached_sounds.end() && load_sound == sound_paths.end())
-		{
-			cached_sound->second->release();
-			fmod_cached_sounds.erase(cached_sound);
-		}
-
-		// If the sound is not cached but we want to load it, do nothing; it will remain in sound_paths and be loaded
-	}
-
-	// Finally, load any remaining sounds that we didn't carry over from the previous map
-	for (size_t i = 0; i < sound_paths.size(); i++) // array-style access is faster than access by iterator
-	{
-		FMOD::Sound *sound = Fmod_CacheSound(sound_paths[i].c_str(), false);
-		if (!sound)
-			_Fmod_Report("WARNING", "Error occured while attempting to precache " + sound_paths[i] + ". Sound was not precached.");
-	}
-
+	_Fmod_LoadSounds();
 	return true;
 }
 
@@ -422,6 +348,12 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 	std::string channel_name = msg.substr(0, msg.find('\n'));
 	std::string sound_path = msg.substr(msg.find('\n') + 1, std::string::npos);
 
+	if (channel_name == "fmod_current_track")
+	{
+		_Fmod_Report("WARNING", "Tried to use fmod_ambient with fmod_current_track! This is not allowed!");
+		return false;
+	}
+
 	FMOD::Sound* sound = Fmod_GetCachedSound(sound_path.c_str());
 	if (!sound) return false; // Error reported in Fmod_GetCachedSound call stack
 
@@ -446,12 +378,12 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 		channel->setPaused(false);
 	}
 
-	// If looping, find the existing channel
+	// If looping, find the existing channel (or create new channel if none exists)
 	else
 	{
-		auto channel_iter = fmod_channels.find(channel_name);
+		FMOD::Channel* channel = Fmod_GetChannel(channel_name.c_str(), false);
 
-		if (channel_iter == fmod_channels.end())
+		if (!channel)
 		{
 			// TODO: send looping and volume info from entity
 			channel = Fmod_CreateChannel(sound, channel_name.c_str(), fmod_sfx_group, true, volume);
@@ -461,7 +393,6 @@ bool CHudFmodPlayer::MsgFunc_FmodAmb(const char* pszName, int iSize, void* pbuf)
 				return false;
 			}
 		}
-		else channel = channel_iter->second;
 
 		channel->set3DAttributes(&fmod_pos, &vel);
 		channel->set3DMinMaxDistance(min_atten_meters, max_atten_meters);
@@ -564,23 +495,7 @@ bool CHudFmodPlayer::MsgFunc_FmodPause(const char* pszName, int iSize, void* pbu
 	BEGIN_READ(pbuf, iSize);
 	std::string channel_name = std::string(READ_STRING());
 
-	FMOD::Channel *channel = NULL;
-
-	if (channel_name == "fmod_current_track") 
-	{
-		channel = fmod_current_track;
-	}
-
-	else
-	{
-		auto it = fmod_channels.find(channel_name);
-		if (it == fmod_channels.end())
-		{
-			_Fmod_Report("WARNING", "Tried to play/pause unknown channel " + channel_name);
-			return false;
-		}
-		channel = it->second;
-	}
+	FMOD::Channel* channel = Fmod_GetChannel(channel_name.c_str());
 
 	if (channel)
 	{
@@ -596,23 +511,7 @@ bool CHudFmodPlayer::MsgFunc_FmodStop(const char* pszName, int iSize, void* pbuf
 	BEGIN_READ(pbuf, iSize);
 	std::string channel_name = std::string(READ_STRING());
 
-	FMOD::Channel* channel = NULL;
-
-	if (channel_name == "fmod_current_track")
-	{
-		channel = fmod_current_track;
-	}
-
-	else
-	{
-		auto it = fmod_channels.find(channel_name);
-		if (it == fmod_channels.end())
-		{
-			_Fmod_Report("WARNING", "Tried to stop unknown channel " + channel_name);
-			return false;
-		}
-		channel = it->second;
-	}
+	FMOD::Channel* channel = Fmod_GetChannel(channel_name.c_str());
 
 	if (channel)
 	{
@@ -628,24 +527,7 @@ bool CHudFmodPlayer::MsgFunc_FmodSeek(const char* pszName, int iSize, void* pbuf
 	float seek_to = READ_COORD();
 	unsigned int position = (unsigned int)(seek_to * 1000); // convert seconds to milliseconds
 
-	FMOD::Channel *channel = NULL;
-
-	// TODO: Maybe consolidate finding the channel into a reusable function
-	if (channel_name == "fmod_current_track") 
-	{
-		channel = fmod_current_track;
-	}
-
-	else
-	{
-		auto it = fmod_channels.find(channel_name);
-		if (it == fmod_channels.end())
-		{
-			_Fmod_Report("WARNING", "Tried to play/pause unknown channel " + channel_name);
-			return false;
-		}
-		channel = it->second;
-	}
+	FMOD::Channel* channel = Fmod_GetChannel(channel_name.c_str());
 
 	if (channel)
 	{

@@ -1754,6 +1754,15 @@ void CBasePlayer::UpdateStatusBar()
 
 void CBasePlayer::PreThink()
 {
+	if (m_fmodNeedRestore)
+	{
+		// Tell fmod on the clientside to load
+		MESSAGE_BEGIN(MSG_ONE, gmsgFmodLoad, NULL, pev);
+		WRITE_STRING(this->m_fmodSaveName);
+		MESSAGE_END();
+		m_fmodNeedRestore = false;
+	}
+
 	int buttonsChanged = (m_afButtonLast ^ pev->button); // These buttons have changed this frame
 
 	// Debounced button codes for pressed/released
@@ -3879,20 +3888,6 @@ void CBasePlayer::UpdateClientData()
 		MESSAGE_BEGIN(MSG_ONE, gmsgResetHUD, NULL, pev);
 		WRITE_BYTE(0);
 		MESSAGE_END();
-
-		// Tell client's Fmod instance to cache all the sounds for the level before gameplay starts
-		MESSAGE_BEGIN(MSG_ONE, gmsgFmodCache, NULL, pev);
-		MESSAGE_END();
-		// TODO: Make sure this doesn't happen when this gets called for, say, removing the HEV suit
-
-		if (m_fmodNeedRestore)
-		{
-			// Tell fmod on the clientside to load
-			MESSAGE_BEGIN(MSG_ONE, gmsgFmodLoad, NULL, pev);
-			WRITE_STRING(this->m_fmodSaveName);
-			MESSAGE_END();
-			m_fmodNeedRestore = false;
-		}
 
 		if (!m_fGameHUDInitialized)
 		{

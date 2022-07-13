@@ -137,6 +137,7 @@ void CFmodPause::Spawn()
 
 void CFmodPause::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useType, float value)
 {
+	// Remember to update server utils if you change this
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodPause, NULL);
 	WRITE_STRING(STRING(pev->target));
 	MESSAGE_END();
@@ -184,6 +185,7 @@ void CFmodStop::Use(CBaseEntity* pActivator, CBaseEntity* pOther, USE_TYPE useTy
 
 void CFmodStop::SendMsg(void)
 {
+	// Remember to update server utils if you change this
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodStop, NULL);
 	WRITE_STRING(STRING(pev->target));
 	MESSAGE_END();
