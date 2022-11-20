@@ -291,48 +291,64 @@ namespace HLFMOD
 		std::string level_path = gamedir + "/" + level_name;
 		BSPGUY::Bsp *bsp = new BSPGUY::Bsp(level_path);
 
-		// Worldspawn SHOULD always be models[0]. Need to verify this.
-		BSPGUY::BSPMODEL worldspawn = bsp->models[0];
-
-		float max = 0;
-		if (abs(worldspawn.nMins.x) > max)
-			max = worldspawn.nMins.x;
-		if (abs(worldspawn.nMins.y) > max)
-			max = worldspawn.nMins.y;
-		if (abs(worldspawn.nMins.z) > max)
-			max = worldspawn.nMins.z;
-		if (abs(worldspawn.nMaxs.x) > max)
-			max = worldspawn.nMaxs.x;
-		if (abs(worldspawn.nMaxs.y) > max)
-			max = worldspawn.nMaxs.y;
-		if (abs(worldspawn.nMaxs.z) > max)
-			max = worldspawn.nMaxs.z;
-
-		fmod_system->setGeometrySettings((max * HLUNITS_TO_METERS) + 1);
-
-		// Iterate through the worldspawn model's faces
-		for (int i = worldspawn.iFirstFace; i < worldspawn.iFirstFace + worldspawn.nFaces; i++)
+		// Iterate through entities
+		for (auto ent : bsp->ents)
 		{
-			BSPGUY::BSPFACE face = bsp->faces[i];
-
-			std::vector<FMOD_VECTOR> fmod_vertices;
-
-			// Iterate through this face's edges
-			for (int j = face.iFirstEdge; j < face.iFirstEdge + face.nEdges; j++)
+			// Process certain entity classes
+			if (ent->keyvalues["classname"] == "worldspawn" || 
+				ent->keyvalues["classname"] == "func_wall" || 
+				ent->keyvalues["classname"] == "func_detail")
 			{
-				BSPGUY::BSPEDGE edge = bsp->edges[j];
+				// Get a reference to the BSP model
+				int test = ent->cachedModelIdx;
+				BSPGUY::BSPMODEL model = bsp->models[ent->cachedModelIdx];
+				
+				// Special handling of worldspawn
+				if (ent->keyvalues["classname"] == "worldspawn")
+				{
+					// Find radius of a sphere that encompasses worldspawn
+					float max = 0;
+					if (abs(model.nMins.x) > max)
+						max = model.nMins.x;
+					if (abs(model.nMins.y) > max)
+						max = model.nMins.y;
+					if (abs(model.nMins.z) > max)
+						max = model.nMins.z;
+					if (abs(model.nMaxs.x) > max)
+						max = model.nMaxs.x;
+					if (abs(model.nMaxs.y) > max)
+						max = model.nMaxs.y;
+					if (abs(model.nMaxs.z) > max)
+						max = model.nMaxs.z;
 
-				// BSPGUY::vec3 vertOne = bsp->verts[edge.iVertex[0]]; // ignore first vertex
-				BSPGUY::vec3 vertTwo = bsp->verts[edge.iVertex[1]];
-				Vector vertTwo_hl = {vertTwo.x, vertTwo.y, vertTwo.z}; // Convert from BSPGUY vec to HL vec
+					// Set radius of sphere (fmod needs this for optimization purposes)
+					fmod_system->setGeometrySettings((max * HLUNITS_TO_METERS)+1);
+				}
 
-				// Push back vertTwo converted to FMOD_VERTEX
-				fmod_vertices.push_back(_Fmod_HLVecToFmodVec(vertTwo_hl));
+				// Iterate through this BSP model's faces
+				for (int i = model.iFirstFace; i < model.iFirstFace+model.nFaces; i++)
+				{
+					BSPGUY::BSPFACE face = bsp->faces[i];
+
+					std::vector<FMOD_VECTOR> fmod_vertices;
+					
+					// Iterate through this face's edges
+					for (int j = face.iFirstEdge; j < face.iFirstEdge+face.nEdges; j++)
+					{
+						BSPGUY::BSPEDGE edge = bsp->edges[j];
+
+						// BSPGUY::vec3 vertOne = bsp->verts[edge.iVertex[0]]; // ignore first vertex
+						BSPGUY::vec3 vertTwo = bsp->verts[edge.iVertex[1]];
+
+						// Push back vertTwo converted to FMOD_VERTEX
+						fmod_vertices.push_back({vertTwo.x * HLUNITS_TO_METERS, vertTwo.y * HLUNITS_TO_METERS, vertTwo.z * HLUNITS_TO_METERS});
+					}
+
+					// Add face to fmod geometry engine
+					int polygonIndex = 0;
+					geo->addPolygon(1, 1, true, fmod_vertices.size(), &(fmod_vertices[0]), &polygonIndex);
+				}
 			}
-
-			// Add face to fmod geometry engine
-			int polygonIndex = 0;
-			geo->addPolygon(1, 1, true, fmod_vertices.size(), &(fmod_vertices[0]), &polygonIndex);
 		}
 	}
 
