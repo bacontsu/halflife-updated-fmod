@@ -76,8 +76,9 @@
       </BaseAddress>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>cd /D "$(ProjectDir)..\.."
+cmd /c copy-client.bat
+EXIT /B 0</Command>
     </PostBuildEvent>
     <PostBuildEvent />
   </ItemDefinitionGroup>

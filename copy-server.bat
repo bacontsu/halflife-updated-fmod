@@ -1,0 +1,1 @@
+robocopy ".\projects\vs2019\Debug\hldll" "C:\Program Files (x86)\Steam\SteamApps\common\Half-Life\testmod\dlls" hl.dll /njh /njs /ndl /nc /ns /np

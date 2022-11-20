@@ -1,0 +1,1 @@
+robocopy ".\projects\vs2019\Debug\hl_cdll" "C:\Program Files (x86)\Steam\SteamApps\common\Half-Life\testmod\cl_dlls" client.dll /njh /njs /ndl /nc /ns /np
