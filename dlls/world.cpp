@@ -33,6 +33,7 @@
 #include "weapons.h"
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
+#include "fmod_save_manager.h"
 
 CGlobalState gGlobalState;
 
@@ -476,6 +477,16 @@ void CWorld::Spawn()
 {
 	g_fGameOver = false;
 	Precache();
+
+	// Check if Fmod Save Manager Entity exists
+	CBaseEntity* pFmodSave = NULL;
+	pFmodSave = UTIL_FindEntityByClassname(NULL, "fmod_save_manager");
+
+	// If not, spawn one
+	if (!pFmodSave)
+	{
+		CBaseEntity::Create("fmod_save_manager", pev->origin, pev->angles, edict());
+	}
 }
 
 void CWorld::Precache()

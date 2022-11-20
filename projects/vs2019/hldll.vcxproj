@@ -137,6 +137,7 @@
     <ClCompile Include="..\..\dlls\flyingmonster.cpp" />
     <ClCompile Include="..\..\dlls\fmod_ambient.cpp" />
     <ClCompile Include="..\..\dlls\fmod_reverb.cpp" />
+    <ClCompile Include="..\..\dlls\fmod_save_manager.cpp" />
     <ClCompile Include="..\..\dlls\fmod_server_utils.cpp" />
     <ClCompile Include="..\..\dlls\fmod_track.cpp" />
     <ClCompile Include="..\..\dlls\func_break.cpp" />
@@ -265,6 +266,7 @@
     <ClInclude Include="..\..\dlls\explode.h" />
     <ClInclude Include="..\..\dlls\extdll.h" />
     <ClInclude Include="..\..\dlls\flyingmonster.h" />
+    <ClInclude Include="..\..\dlls\fmod_save_manager.h" />
     <ClInclude Include="..\..\dlls\fmod_server_util.h" />
     <ClInclude Include="..\..\dlls\func_break.h" />
     <ClInclude Include="..\..\dlls\gamerules.h" />

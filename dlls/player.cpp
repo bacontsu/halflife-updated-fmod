@@ -114,8 +114,6 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 		DEFINE_FIELD(CBasePlayer, m_iHideHUD, FIELD_INTEGER),
 		DEFINE_FIELD(CBasePlayer, m_iFOV, FIELD_INTEGER),
 
-		DEFINE_ARRAY(CBasePlayer, m_fmodSaveName, FIELD_CHARACTER, FMOD_SAVE_LENGTH)
-
 		//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
 		//DEFINE_FIELD( CBasePlayer, m_fGameHUDInitialized, FIELD_INTEGER ), // only used in multiplayer games
 		//DEFINE_FIELD( CBasePlayer, m_flStopExtraSoundTime, FIELD_TIME ),
@@ -1754,15 +1752,6 @@ void CBasePlayer::UpdateStatusBar()
 
 void CBasePlayer::PreThink()
 {
-	if (m_fmodNeedRestore)
-	{
-		// Tell fmod on the clientside to load
-		MESSAGE_BEGIN(MSG_ONE, gmsgFmodLoad, NULL, pev);
-		WRITE_STRING(this->m_fmodSaveName);
-		MESSAGE_END();
-		m_fmodNeedRestore = false;
-	}
-
 	int buttonsChanged = (m_afButtonLast ^ pev->button); // These buttons have changed this frame
 
 	// Debounced button codes for pressed/released
@@ -2922,25 +2911,6 @@ bool CBasePlayer::Save(CSave& save)
 	if (!CBaseMonster::Save(save))
 		return false;
 
-	// Get string representation of UNIX time
-	std::time_t time = std::time(0);
-	std::stringstream ss;
-	ss << time;
-	std::string ts = ss.str();
-
-	// Get game directory
-	char gamedir[64];
-	GET_GAME_DIR(gamedir);
-
-	// Create the save name string and copy it to the member field
-	std::string fmod_save_name = std::string(gamedir) + std::string("/SAVE/") + std::string("fmod") + ts + ".fsv";
-	strncpy(this->m_fmodSaveName, fmod_save_name.c_str(), FMOD_SAVE_LENGTH-1);
-
-	// Tell fmod on the clientside to save
-	MESSAGE_BEGIN(MSG_ALL, gmsgFmodSave, NULL);
-	WRITE_STRING(this->m_fmodSaveName);
-	MESSAGE_END();
-
 	return save.WriteFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 }
 
@@ -3018,8 +2988,6 @@ bool CBasePlayer::Restore(CRestore& restore)
 	m_bResetViewEntity = true;
 
 	m_bRestored = true;
-
-	m_fmodNeedRestore = true;
 
 	return status;
 }

@@ -378,6 +378,9 @@
     <ClCompile Include="..\..\dlls\fmod_server_utils.cpp">
       <Filter>Source Files\dlls</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\dlls\fmod_save_manager.cpp">
+      <Filter>Source Files\dlls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\dlls\doors.h">
@@ -633,6 +636,9 @@
       <Filter>Header Files\public</Filter>
     </ClInclude>
     <ClInclude Include="..\..\dlls\fmod_server_util.h">
+      <Filter>Header Files\dlls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\dlls\fmod_save_manager.h">
       <Filter>Header Files\dlls</Filter>
     </ClInclude>
   </ItemGroup>

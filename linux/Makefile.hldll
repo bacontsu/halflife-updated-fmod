@@ -59,6 +59,7 @@ HLDLL_OBJS = \
 	$(HLDLL_OBJ_DIR)/flyingmonster.o \
 	$(HLDLL_OBJ_DIR)/fmod_ambient.o \
 	$(HLDLL_OBJ_DIR)/fmod_reverb.o \
+	$(HLDLL_OBJ_DIR)/fmod_save_manager.o \
 	$(HLDLL_OBJ_DIR)/fmod_server_utils.o \
 	$(HLDLL_OBJ_DIR)/fmod_track.o \
 	$(HLDLL_OBJ_DIR)/func_break.o \
