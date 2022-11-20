@@ -109,6 +109,8 @@ public:
 
 	float m_flLastYawTime;
 
+	bool m_AllowItemDropping = true;
+
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 
@@ -191,8 +193,13 @@ public:
 	virtual void ScheduleChange() {}
 	// virtual bool CanPlaySequence() { return ((m_pCine == NULL) && (m_MonsterState == MONSTERSTATE_NONE || m_MonsterState == MONSTERSTATE_IDLE || m_IdealMonsterState == MONSTERSTATE_IDLE)); }
 	virtual bool CanPlaySequence(bool fDisregardState, int interruptLevel);
-	virtual bool CanPlaySentence(bool fDisregardState) { return IsAlive(); }
-	virtual void PlaySentence(const char* pszSentence, float duration, float volume, float attenuation);
+	virtual bool CanPlaySentence(bool fDisregardState) { return IsAlive() && (m_MonsterState == MONSTERSTATE_SCRIPT || pev->deadflag == DEAD_NO); }
+	void PlaySentence(const char* pszSentence, float duration, float volume, float attenuation);
+
+protected:
+	virtual void PlaySentenceCore(const char* pszSentence, float duration, float volume, float attenuation);
+
+public:
 	virtual void PlayScriptedSentence(const char* pszSentence, float duration, float volume, float attenuation, bool bConcurrent, CBaseEntity* pListener);
 
 	virtual void SentenceStop();
@@ -356,5 +363,9 @@ public:
 	bool ExitScriptedSequence();
 	bool CineCleanup();
 
-	CBaseEntity* DropItem(const char* pszItemName, const Vector& vecPos, const Vector& vecAng); // drop an item.
+	/**
+	*	@brief Drop an item.
+	*	Will return @c nullptr if item dropping is disabled for this NPC.
+	*/
+	CBaseEntity* DropItem(const char* pszItemName, const Vector& vecPos, const Vector& vecAng);
 };

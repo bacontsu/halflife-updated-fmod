@@ -42,7 +42,7 @@ void CMiniMem::Deallocate(void* memory, std::size_t sizeInBytes, std::size_t ali
 		return;
 	}
 
-	_particles.erase(std::find(_particles.begin(), _particles.end(), memory), _particles.end());
+	_particles.erase(std::find(_particles.begin(), _particles.end(), memory));
 
 	_pool.deallocate(memory, sizeInBytes, alignment);
 }
@@ -137,7 +137,7 @@ void CMiniMem::ProcessAll()
 int CMiniMem::ApplyForce(Vector vOrigin, Vector vDirection, float flRadius, float flStrength)
 {
 	const float radiusSquared = flRadius * flRadius;
-	
+
 	for (auto effect : _particles)
 	{
 		if (!effect->m_bAffectedByForce)
