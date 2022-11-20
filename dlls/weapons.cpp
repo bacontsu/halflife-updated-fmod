@@ -237,14 +237,16 @@ void UTIL_PrecacheOtherWeapon(const char* szClassname)
 		{
 			CBasePlayerItem::ItemInfoArray[II.iId] = II;
 
+			const char* weaponName = ((II.iFlags & ITEM_FLAG_EXHAUSTIBLE) != 0) ? STRING(pEntity->pev->classname) : nullptr;
+
 			if (II.pszAmmo1 && '\0' != *II.pszAmmo1)
 			{
-				AddAmmoNameToAmmoRegistry(II.pszAmmo1);
+				AddAmmoNameToAmmoRegistry(II.pszAmmo1, weaponName);
 			}
 
 			if (II.pszAmmo2 && '\0' != *II.pszAmmo2)
 			{
-				AddAmmoNameToAmmoRegistry(II.pszAmmo2);
+				AddAmmoNameToAmmoRegistry(II.pszAmmo2, weaponName);
 			}
 
 			memset(&II, 0, sizeof II);
@@ -566,11 +568,9 @@ void CBasePlayerItem::DestroyItem()
 	Kill();
 }
 
-bool CBasePlayerItem::AddToPlayer(CBasePlayer* pPlayer)
+void CBasePlayerItem::AddToPlayer(CBasePlayer* pPlayer)
 {
 	m_pPlayer = pPlayer;
-
-	return true;
 }
 
 void CBasePlayerItem::Drop()
@@ -621,8 +621,9 @@ bool CBasePlayerWeapon::AddDuplicate(CBasePlayerItem* pOriginal)
 }
 
 
-bool CBasePlayerWeapon::AddToPlayer(CBasePlayer* pPlayer)
+void CBasePlayerWeapon::AddToPlayer(CBasePlayer* pPlayer)
 {
+	/*
 	if ((iFlags() & ITEM_FLAG_EXHAUSTIBLE) != 0 && m_iDefaultAmmo == 0 && m_iClip <= 0)
 	{
 		//This is an exhaustible weapon that has no ammo left. Don't add it, queue it up for destruction instead.
@@ -630,8 +631,9 @@ bool CBasePlayerWeapon::AddToPlayer(CBasePlayer* pPlayer)
 		pev->nextthink = gpGlobals->time + 0.1;
 		return false;
 	}
+	*/
 
-	bool bResult = CBasePlayerItem::AddToPlayer(pPlayer);
+	CBasePlayerItem::AddToPlayer(pPlayer);
 
 	pPlayer->SetWeaponBit(m_iId);
 
@@ -640,37 +642,6 @@ bool CBasePlayerWeapon::AddToPlayer(CBasePlayer* pPlayer)
 		m_iPrimaryAmmoType = pPlayer->GetAmmoIndex(pszAmmo1());
 		m_iSecondaryAmmoType = pPlayer->GetAmmoIndex(pszAmmo2());
 	}
-
-	if (!bResult)
-	{
-		return false;
-	}
-
-	if (!AddWeapon())
-	{
-		return false;
-	}
-
-	//Immediately update the ammo HUD so weapon pickup isn't sometimes red because the HUD doesn't know about regenerating/free ammo yet.
-	if (-1 != m_iPrimaryAmmoType)
-	{
-		m_pPlayer->SendSingleAmmoUpdate(CBasePlayer::GetAmmoIndex(pszAmmo1()));
-	}
-
-	if (-1 != m_iSecondaryAmmoType)
-	{
-		m_pPlayer->SendSingleAmmoUpdate(CBasePlayer::GetAmmoIndex(pszAmmo2()));
-	}
-
-	//Don't show weapon pickup if we're spawning or if it's an exhaustible weapon (will show ammo pickup instead).
-	if (!m_pPlayer->m_bIsSpawning && (iFlags() & ITEM_FLAG_EXHAUSTIBLE) == 0)
-	{
-		MESSAGE_BEGIN(MSG_ONE, gmsgWeapPickup, NULL, pPlayer->pev);
-		WRITE_BYTE(m_iId);
-		MESSAGE_END();
-	}
-
-	return true;
 }
 
 bool CBasePlayerWeapon::UpdateClientData(CBasePlayer* pPlayer)
@@ -731,7 +702,7 @@ bool CBasePlayerWeapon::UpdateClientData(CBasePlayer* pPlayer)
 
 void CBasePlayerWeapon::SendWeaponAnim(int iAnim, int body)
 {
-	const bool skiplocal = UseDecrement() != false;
+	const bool skiplocal = !m_ForceSendAnimations && UseDecrement() != false;
 
 	m_pPlayer->pev->weaponanim = iAnim;
 
@@ -1010,6 +981,18 @@ bool CBasePlayerWeapon::ExtractClipAmmo(CBasePlayerWeapon* pWeapon)
 //=========================================================
 void CBasePlayerWeapon::RetireWeapon()
 {
+	SetThink(&CBasePlayerWeapon::CallDoRetireWeapon);
+	pev->nextthink = gpGlobals->time + 0.01f;
+}
+
+void CBasePlayerWeapon::DoRetireWeapon()
+{
+	if (!m_pPlayer || m_pPlayer->m_pActiveItem != this)
+	{
+		// Already retired?
+		return;
+	}
+
 	// first, no viewmodel at all.
 	m_pPlayer->pev->viewmodel = iStringNull;
 	m_pPlayer->pev->weaponmodel = iStringNull;
