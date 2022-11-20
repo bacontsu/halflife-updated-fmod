@@ -64,6 +64,9 @@
     <Filter Include="Source Files\cl_dll\particleman">
       <UniqueIdentifier>{7085339d-2b33-4cdf-846c-0e4c7d33add8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\cl_dll\bspguy">
+      <UniqueIdentifier>{ca1a9195-7ca5-4f1a-a823-cec45f6dafcc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\dlls\crossbow.cpp">
@@ -326,6 +329,42 @@
     </ClCompile>
     <ClCompile Include="..\..\cl_dll\fmod_client_player.cpp">
       <Filter>Source Files\cl_dll</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\Bsp.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\bsptypes.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\BSP_Entity.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\Keyvalue.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\mat4x4.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\rad.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\remap.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\BSP_util.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\vectors.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\vis.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\Wad.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\bspguy\winding.cpp">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -604,6 +643,48 @@
     </ClInclude>
     <ClInclude Include="..\..\cl_dll\fmod_api.h">
       <Filter>Header Files\cl_dll</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\Bsp.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\bsplimits.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\bsptypes.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\BSP_Entity.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\Keyvalue.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\mat4x4.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\rad.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\remap.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\BSP_util.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\vectors.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\vis.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\Wad.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\winding.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\bspguy\types.h">
+      <Filter>Source Files\cl_dll\bspguy</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
