@@ -18,7 +18,7 @@ TYPEDESCRIPTION CFmodSaveManager::m_fmodSaveData[] =
 
 void CFmodSaveManager::Spawn()
 {
-	ALERT(at_error, "FMOD SAVE MANAGER SPAWNED\n");
+	ALERT(at_console, "FMOD: SAVE MANAGER SPAWNED\n");
 }
 
 bool CFmodSaveManager::Save(CSave& save)
