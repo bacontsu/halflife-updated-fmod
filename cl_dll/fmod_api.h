@@ -68,7 +68,6 @@ namespace HLFMOD
 
 	void _Fmod_LoadSounds(void);
 	void _Fmod_LoadTracks(void);
-	void _Fmod_LoadBSPGeo(void);
 	void _Fmod_Update_Volume(void);
 	void _Fmod_Report(const std::string &report_type, const std::string &info);
 	bool _Fmod_Result_OK(FMOD_RESULT *result);

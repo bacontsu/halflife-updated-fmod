@@ -5,12 +5,10 @@
 #include "parsemsg.h"
 #include "fmod_api.h"
 #include "FMOD/fmod_errors.h"
-#include "bspguy/Bsp.h"
 
 #include <map>
 #include <fstream>
 #include <iostream>
-#include <unordered_set>
 #include <set>
 
 namespace HLFMOD
@@ -154,9 +152,6 @@ namespace HLFMOD
 			// Cache sounds
 			_Fmod_LoadSounds();
 
-			// Load BSP Geometry into Fmod Geometry engine
-			_Fmod_LoadBSPGeo();
-
 			last_level_name = level_name;
 		}
 	}
@@ -277,79 +272,6 @@ namespace HLFMOD
 			_Fmod_Report("WARNING", "Stopped reading soundcache file " + tracks_txt_path + " before the end of file due to unknown error.");
 
 		tracks_txt_file.close();
-	}
-
-	void _Fmod_LoadBSPGeo(void)
-	{
-		FMOD_RESULT result;
-		FMOD::Geometry* geo = NULL;
-		result = fmod_system->createGeometry(10000, 30000, &geo);
-		_Fmod_Result_OK(&result);
-
-		std::string gamedir = gEngfuncs.pfnGetGameDirectory();
-		std::string level_name = gEngfuncs.pfnGetLevelName();
-		std::string level_path = gamedir + "/" + level_name;
-		BSPGUY::Bsp *bsp = new BSPGUY::Bsp(level_path);
-
-		// Iterate through entities
-		for (auto ent : bsp->ents)
-		{
-			// Process certain entity classes
-			if (ent->keyvalues["classname"] == "worldspawn" || 
-				ent->keyvalues["classname"] == "func_wall" || 
-				ent->keyvalues["classname"] == "func_detail")
-			{
-				// Get a reference to the BSP model
-				int test = ent->cachedModelIdx;
-				BSPGUY::BSPMODEL model = bsp->models[ent->cachedModelIdx];
-				
-				// Special handling of worldspawn
-				if (ent->keyvalues["classname"] == "worldspawn")
-				{
-					// Find radius of a sphere that encompasses worldspawn
-					float max = 0;
-					if (abs(model.nMins.x) > max)
-						max = model.nMins.x;
-					if (abs(model.nMins.y) > max)
-						max = model.nMins.y;
-					if (abs(model.nMins.z) > max)
-						max = model.nMins.z;
-					if (abs(model.nMaxs.x) > max)
-						max = model.nMaxs.x;
-					if (abs(model.nMaxs.y) > max)
-						max = model.nMaxs.y;
-					if (abs(model.nMaxs.z) > max)
-						max = model.nMaxs.z;
-
-					// Set radius of sphere (fmod needs this for optimization purposes)
-					fmod_system->setGeometrySettings((max * HLUNITS_TO_METERS)+1);
-				}
-
-				// Iterate through this BSP model's faces
-				for (int i = model.iFirstFace; i < model.iFirstFace+model.nFaces; i++)
-				{
-					BSPGUY::BSPFACE face = bsp->faces[i];
-
-					std::vector<FMOD_VECTOR> fmod_vertices;
-					
-					// Iterate through this face's edges
-					for (int j = face.iFirstEdge; j < face.iFirstEdge+face.nEdges; j++)
-					{
-						BSPGUY::BSPEDGE edge = bsp->edges[j];
-
-						// BSPGUY::vec3 vertOne = bsp->verts[edge.iVertex[0]]; // ignore first vertex
-						BSPGUY::vec3 vertTwo = bsp->verts[edge.iVertex[1]];
-
-						// Push back vertTwo converted to FMOD_VERTEX
-						fmod_vertices.push_back({vertTwo.x * HLUNITS_TO_METERS, vertTwo.y * HLUNITS_TO_METERS, vertTwo.z * HLUNITS_TO_METERS});
-					}
-
-					// Add face to fmod geometry engine
-					int polygonIndex = 0;
-					geo->addPolygon(1, 1, true, fmod_vertices.size(), &(fmod_vertices[0]), &polygonIndex);
-				}
-			}
-		}
 	}
 
 	void Fmod_Update_Listener_Position(const Vector& pos, const Vector& vel, const Vector& forward, const Vector& up)
