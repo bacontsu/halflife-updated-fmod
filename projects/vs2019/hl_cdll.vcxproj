@@ -75,6 +75,7 @@
       <AdditionalDependencies>..\..\utils\vgui\lib\win32_vc6\vgui.lib;wsock32.lib;..\..\lib\public\sdl2.lib;..\..\lib\public\fmod_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <BaseAddress>
       </BaseAddress>
+      <DelayLoadDLLs>fmod.dll</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
       <Command>cd /D "$(ProjectDir)..\.."
