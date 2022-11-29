@@ -12,6 +12,7 @@
 #include "remap.h"
 //#include "Renderer.h"
 #include <set>
+#include <cfloat>
 
 namespace BSPGUY
 {

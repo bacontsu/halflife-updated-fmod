@@ -15,3 +15,9 @@
 !vgui.so
 !release/vgui.dylib
 !release/vgui.so
+!libfmod.so
+!libfmod.so.13
+!libfmod.so.13.5
+!libfmodL.so
+!libfmodL.so.13
+!libfmodL.so.13.5

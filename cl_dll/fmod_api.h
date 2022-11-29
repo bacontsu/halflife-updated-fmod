@@ -1,9 +1,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include "FMOD/fmod.hpp"
-#include "vector.h"
 
 /* Notes on terminology: 
 As far as fmod is concerned, a "sound" corresponds to a file on disk, but a "channel" is what you 

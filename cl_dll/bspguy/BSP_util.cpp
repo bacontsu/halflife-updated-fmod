@@ -26,15 +26,9 @@
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #endif
 
-#ifdef __cpp_lib_filesystem
 #include <filesystem>
 namespace fs = std::filesystem;
 #define USE_FILESYSTEM
-#else 
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#define USE_FILESYSTEM
-#endif
 
 namespace BSPGUY
 {

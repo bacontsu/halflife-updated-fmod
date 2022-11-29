@@ -260,6 +260,7 @@ namespace HLFMOD
 		std::string filename;
 		while (std::getline(tracks_txt_file, filename))
 		{
+			// TODO: Need to handle Windows vs Unix line endings
 			FMOD::Sound* sound = Fmod_CacheSound(filename.c_str(), true);
 			if (!sound)
 			{

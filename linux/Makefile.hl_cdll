@@ -19,11 +19,7 @@ CFLAGS=$(BASE_CFLAGS) $(ARCH_CFLAGS) -DCLIENT_DLL
 
 INCLUDEDIRS=-I$(HL_SRC_DIR) -I$(HL_PARTICLEMAN_DIR) -I../dlls -I/usr/include/malloc -I$(COMMON_SRC_DIR) -I$(PUBLIC_SRC_DIR) -I../pm_shared -I../engine -I../utils/vgui/include -I../game_shared -I../external
 
-ifeq ($(OS),Darwin)
-	LDFLAGS=$(SHLIBLDFLAGS) $(CPP_LIB) -framework Carbon $(CFG)/vgui.dylib -L. -lSDL2-2.0.0 -lfmod
-else
-	LDFLAGS=$(SHLIBLDFLAGS) $(CPP_LIB)  -L$(CFG) vgui.so -L. libSDL2-2.0.so.0 -lfmod
-endif
+LDFLAGS=$(SHLIBLDFLAGS) $(CPP_LIB)  -L$(CFG) vgui.so -L. libSDL2-2.0.so.0 -zlazyload -lfmod
 
 DO_CC=$(CPLUS) $(INCLUDEDIRS) $(CFLAGS) -o $@ -c $<
 
@@ -50,8 +46,21 @@ HL1_OBJS = \
 	$(HL1_OBJ_DIR)/ev_common.o \
 	$(HL1_OBJ_DIR)/events.o \
 	$(HL1_OBJ_DIR)/flashlight.o \
-	$(HL1_OBJ_DIR)/fmod_manager.o \
-	$(HL1_OBJ_DIR)/fmod_player.o \
+	$(HL1_OBJ_DIR)/fmod_client_player.o \
+	$(HL1_OBJ_DIR)/fmod_impl.o \
+	$(HL1_OBJ_DIR)/bspguy/Bsp.o \
+	$(HL1_OBJ_DIR)/bspguy/BSP_Entity.o \
+	$(HL1_OBJ_DIR)/bspguy/BSP_util.o \
+	$(HL1_OBJ_DIR)/bspguy/bsptypes.o \
+	$(HL1_OBJ_DIR)/bspguy/Keyvalue.o \
+	$(HL1_OBJ_DIR)/bspguy/lodepng.o \
+	$(HL1_OBJ_DIR)/bspguy/mat4x4.o \
+	$(HL1_OBJ_DIR)/bspguy/rad.o \
+	$(HL1_OBJ_DIR)/bspguy/remap.o \
+	$(HL1_OBJ_DIR)/bspguy/vectors.o \
+	$(HL1_OBJ_DIR)/bspguy/vis.o \
+	$(HL1_OBJ_DIR)/bspguy/Wad.o \
+	$(HL1_OBJ_DIR)/bspguy/winding.o \
 	$(HL1_OBJ_DIR)/GameStudioModelRenderer.o \
 	$(HL1_OBJ_DIR)/geiger.o \
 	$(HL1_OBJ_DIR)/health.o \
@@ -143,6 +152,7 @@ $(HL1_OBJ_DIR):
 	mkdir -p $(HL1_OBJ_DIR)/hl
 	mkdir -p $(HL1_OBJ_DIR)/dlls/wpn_shared
 	mkdir -p $(HL1_OBJ_DIR)/VGUI
+	mkdir -p $(HL1_OBJ_DIR)/bspguy
 
 $(HL1_SERVER_OBJ_DIR):
 	mkdir -p $(HL1_SERVER_OBJ_DIR)
