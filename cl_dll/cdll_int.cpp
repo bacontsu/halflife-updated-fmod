@@ -29,12 +29,7 @@
 #include <string.h>
 #include "vgui_int.h"
 
-#ifdef WIN32
-	#include "PlatformHeaders.h"
-#else // Linux
-// TODO
-#endif
-
+#include "PlatformHeaders.h"
 #include "Platform.h"
 #include "Exports.h"
 
@@ -136,21 +131,22 @@ int DLLEXPORT Initialize(cl_enginefunc_t* pEnginefuncs, int iVersion)
 	}
 
 	// Load Fmod shared library from client folder
-#ifdef WIN32
 	// TODO: use built in filesystem functions to get files
 	std::string gamedir = gEngfuncs.pfnGetGameDirectory();
-	std::string fmod_dll_path = gamedir + "/cl_dlls/fmod.dll";
 
-	void* handle = LoadLibraryA(fmod_dll_path.c_str());
+#ifdef WIN32
+	std::string fmod_lib_path = gamedir + "/cl_dlls/fmod.dll";
+	void* fmod_lib_handle = LoadLibraryA(fmod_lib_path.c_str());
+#else // Linux
+	std::string fmod_lib_path = gamedir + "/cl_dlls/fmod.so";
+	void* fmod_lib_handle = dlopen(fmod_lib_path.c_str(), RTLD_LAZY);
+#endif
 
-	if (!handle)
+	if (!fmod_lib_handle)
 	{
-		fprintf(stderr, "ERROR: Could not load fmod library at %s\n", fmod_dll_path.c_str());
+		fprintf(stderr, "ERROR: Could not load fmod library at %s\n", fmod_lib_path.c_str());
 		return 0;
 	}
-#else // Linux
-	// TODO: Implement Linux delayed loading
-#endif
 
 	// Init Fmod subsystem
 	if (!HLFMOD::Fmod_Init())

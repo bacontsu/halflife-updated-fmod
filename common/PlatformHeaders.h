@@ -69,6 +69,7 @@
 
 #undef HSPRITE
 #pragma pop_macro("ARRAYSIZE")
-#else
-//Add core Linux headers here if you need them
+
+#else //Add core Linux headers here if you need them
+#include <dlfcn.h> // dlopen
 #endif
