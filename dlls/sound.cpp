@@ -26,6 +26,9 @@
 #include "pm_defs.h"
 #include "pm_shared.h"
 
+#include "UserMessages.h"
+#include <string>
+
 static char* memfgets(byte* pMemFile, int fileSize, int& filePos, char* pBuffer, int bufferSize);
 
 
@@ -1416,12 +1419,42 @@ void EMIT_SOUND_DYN(edict_t* entity, int channel, const char* sample, float volu
 	{
 		char name[32];
 		if (SENTENCEG_Lookup(sample, name) >= 0)
-			EMIT_SOUND_DYN2(entity, channel, name, volume, attenuation, flags, pitch);
+		{
+			EMIT_SOUND_DYN3(entity, channel, name, volume, attenuation, flags, pitch);
+			ALERT(at_console, "sentence: %s  sample: %s\n", name, sample);
+		}
 		else
 			ALERT(at_aiconsole, "Unable to find %s in sentences.txt\n", sample);
 	}
 	else
 		EMIT_SOUND_DYN2(entity, channel, sample, volume, attenuation, flags, pitch);
+}
+
+void EMIT_SOUND_DYN2(edict_t* entity, int channel, const char* sample, float volume, float attenuation,
+	int flags, int pitch)
+{
+
+	auto pEnt = CBaseEntity::Instance(entity);
+	bool m_bLooping = false;
+	float min_atten = 250.0f, max_atten = 40000.0f, volumes = 5;
+	if (pEnt)
+	{
+		std::string msg = std::to_string(pEnt->entindex()) + std::string("\n") + std::string("/sound/") + sample;
+		// TODO: Figure out if we can truly only write one string in a message or if I'm doing something wrong
+		MESSAGE_BEGIN(MSG_ALL, gmsgFmodEmit, NULL);
+		WRITE_STRING(msg.c_str());
+		WRITE_BYTE(m_bLooping);
+		WRITE_COORD(pEnt->pev->origin.x);
+		WRITE_COORD(pEnt->pev->origin.y);
+		WRITE_COORD(pEnt->pev->origin.z);
+		WRITE_FLOAT(volume);	// Default: 1.0
+		WRITE_FLOAT(min_atten); // Default: 40.0
+		WRITE_FLOAT(max_atten); // Default: 40000.0
+		WRITE_FLOAT(pitch);		// Default: 1.0 (2.0 = one octave up, 0.5 = one octave down)
+		MESSAGE_END();
+
+		ALERT(at_console, "sound message: %s\n", msg.c_str());
+	}
 }
 
 void EMIT_SOUND_PREDICTED(edict_t* entity, int channel, const char* sample, float volume, float attenuation,

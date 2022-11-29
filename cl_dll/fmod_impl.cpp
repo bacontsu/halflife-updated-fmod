@@ -1,8 +1,12 @@
+#include <filesystem>
+
 #include "cl_dll.h"
 #include "cl_util.h"
 #include "extdll.h"
 #include "hud.h"
 #include "parsemsg.h"
+#include "com_model.h"
+
 #include "fmod_api.h"
 #include "FMOD/fmod_errors.h"
 
@@ -122,6 +126,9 @@ namespace HLFMOD
 
 		// update position
 		Fmod_Update_Listener_Position(gHUD.playerOrigin, gHUD.playerSpeed, playerForward, playerUp);
+
+		// update entities position
+		Fmod_Update_Sound_Sources();
 	}
 
 	void Fmod_Think(struct ref_params_s* pparams)
@@ -247,6 +254,11 @@ namespace HLFMOD
 		std::string gamedir = gEngfuncs.pfnGetGameDirectory();
 		std::string tracks_txt_path = gamedir + "/" + "tracks.txt";
 
+		if (!std::filesystem::exists(tracks_txt_path))
+		{
+			tracks_txt_path = "valve/tracks.txt";
+		}
+
 		std::ifstream tracks_txt_file;
 		tracks_txt_file.open(tracks_txt_path);
 
@@ -273,6 +285,40 @@ namespace HLFMOD
 			_Fmod_Report("WARNING", "Stopped reading soundcache file " + tracks_txt_path + " before the end of file due to unknown error.");
 
 		tracks_txt_file.close();
+	}
+
+	// Update entities origin
+	void Fmod_Update_Sound_Sources()
+	{
+		for (int index = 0; index < 512; index++)
+		{
+			auto ent = gEngfuncs.GetEntityByIndex(index);
+			if (ent && ent->model)
+			{
+				if (ent->model->type == mod_brush)
+				{
+					auto channel = Fmod_GetChannel(std::string(std::to_string(ent->index)).c_str(), false);
+					if (channel)
+					{
+						FMOD_VECTOR org = _Fmod_HLVecToFmodVec(ent->curstate.origin + (ent->model->mins + ent->model->maxs) * 0.5f);
+						FMOD_VECTOR vel;
+
+						channel->set3DAttributes(&org, &vel);
+					}
+				}
+				else
+				{
+					auto channel = Fmod_GetChannel(std::string(std::to_string(ent->index)).c_str(), false);
+					if (channel)
+					{
+						FMOD_VECTOR org = _Fmod_HLVecToFmodVec(ent->curstate.origin);
+						FMOD_VECTOR vel;
+
+						channel->set3DAttributes(&org, &vel);
+					}
+				}
+			}
+		}
 	}
 
 	void Fmod_Update_Listener_Position(const Vector& pos, const Vector& vel, const Vector& forward, const Vector& up)
@@ -327,6 +373,11 @@ namespace HLFMOD
 
 		std::string gamedir = gEngfuncs.pfnGetGameDirectory();
 		std::string full_path = gamedir + "/" + path; 
+
+		if (!std::filesystem::exists(full_path))
+		{
+			full_path = "valve/" + std::string(path);
+		}
 
 		// override play_everywhere if filename ends in _2D
 		int ext_period_index = full_path.find_last_of('.');
@@ -591,4 +642,5 @@ namespace HLFMOD
 
 		return FMODVector;
 	}
-	}
+
+}

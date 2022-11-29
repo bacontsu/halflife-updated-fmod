@@ -46,6 +46,7 @@ namespace HLFMOD
 	void Fmod_Update(void);
 	void Fmod_Think(struct ref_params_s *pparams);
 	void Fmod_Update_Listener_Position(const Vector& pos, const Vector& vel, const Vector& forward, const Vector& up);
+	void Fmod_Update_Sound_Sources();
 	void Fmod_Release_Sounds(void);
 	void Fmod_Release_Channels(void);
 	void Fmod_Shutdown(void);

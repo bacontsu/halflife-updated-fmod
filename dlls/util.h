@@ -508,6 +508,8 @@ float TEXTURETYPE_PlaySound(TraceResult* ptr, Vector vecSrc, Vector vecEnd, int 
 void EMIT_SOUND_DYN(edict_t* entity, int channel, const char* sample, float volume, float attenuation,
 	int flags, int pitch);
 
+void EMIT_SOUND_DYN2(edict_t* entity, int channel, const char* sample, float volume, float attenuation,
+	int flags, int pitch);
 
 inline void EMIT_SOUND(edict_t* entity, int channel, const char* sample, float volume, float attenuation)
 {
@@ -529,6 +531,7 @@ void EMIT_SOUND_PREDICTED(edict_t* entity, int channel, const char* sample, floa
 void EMIT_SOUND_SUIT(edict_t* entity, const char* sample);
 void EMIT_GROUPID_SUIT(edict_t* entity, int isentenceg);
 void EMIT_GROUPNAME_SUIT(edict_t* entity, const char* groupname);
+
 
 #define PRECACHE_SOUND_ARRAY(a)                \
 	{                                          \

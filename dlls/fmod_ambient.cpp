@@ -62,7 +62,7 @@ void CFmodAmbient::SendMsg(void)
 {
 	// IF YOU MODIFY THIS DON'T FORGET TO UPDATE MsgFunc_FmodSave/Load
 	// Name of the channel and path of the sound
-	std::string msg = STRING(pev->targetname) + std::string("\n") + STRING(pev->message);
+	std::string msg = std::to_string(this->entindex()) + std::string("\n") + STRING(pev->message);
 	// TODO: Figure out if we can truly only write one string in a message or if I'm doing something wrong
 	MESSAGE_BEGIN(MSG_ALL, gmsgFmodAmb, NULL);
 	WRITE_STRING(msg.c_str());
