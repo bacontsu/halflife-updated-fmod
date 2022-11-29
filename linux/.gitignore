@@ -21,3 +21,5 @@
 !libfmodL.so
 !libfmodL.so.13
 !libfmodL.so.13.5
+!libfmod.so.init.c
+!libfmod.so.tramp.S

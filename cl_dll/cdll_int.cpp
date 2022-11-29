@@ -139,7 +139,7 @@ int DLLEXPORT Initialize(cl_enginefunc_t* pEnginefuncs, int iVersion)
 	void* fmod_lib_handle = LoadLibraryA(fmod_lib_path.c_str());
 #else // Linux
 	std::string fmod_lib_path = gamedir + "/cl_dlls/libfmod.so";
-	void* fmod_lib_handle = dlopen(fmod_lib_path.c_str(), RTLD_LAZY);
+	void* fmod_lib_handle = dlopen(fmod_lib_path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
 #endif
 
 	if (!fmod_lib_handle)

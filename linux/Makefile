@@ -18,7 +18,6 @@ COMMON_SRC_DIR=$(SOURCE_DIR)/common
 PM_SRC_DIR=$(SOURCE_DIR)/pm_shared
 GAME_SHARED_SRC_DIR=$(SOURCE_DIR)/game_shared
 PUBLIC_SRC_DIR=$(SOURCE_DIR)/public
-BSPGUY_SRC_DIR=$(SOURCE_DIR)/cl_dll/bspguy
 
 BUILD_OBJ_DIR=$(BUILD_DIR)/obj
 
@@ -42,7 +41,6 @@ endif
 
 BASE_CFLAGS=-std=c++17 -fpermissive -fno-strict-aliasing -fno-exceptions -fexpensive-optimizations -Werror=return-type -w
 BASE_CFLAGS+=-DNDEBUG -DPOSIX -D_POSIX -DLINUX -D_LINUX -DGNUC -DNO_MALLOC_OVERRIDE -DCLIENT_WEAPONS
-BASE_CFLAGS+=-I$(BSPGUY_SRC_DIR)
 
 SHLIBEXT=so
 SHLIBCFLAGS=
